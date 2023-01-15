@@ -3,7 +3,7 @@
 #include <iostream>
 #include <set>
 #include <unordered_map>
-#include <map>
+#include <queue>
 
 namespace structHorn {
 	
@@ -23,11 +23,12 @@ namespace structHorn {
 		weight_map weight; // hyperarc -> weight
 
 		/*
-		enum class node_type {simple, compound};
-		typedef std::pair<int, node_type> search_node;
-		struct compare_search_nodes {
-			bool operator()(const search_node& lhs, const search_node& rhs) {
-				return (((lhs.first < rhs.first) && (lhs.second == rhs.second)) || (lhs.second == node_type::simple && rhs.second == node_type::compound));
+		typedef std::pair<unsigned int, int> hyperarc_priority;
+
+		class hyperarc_priority_comparison {
+		public:
+			bool operator() (const hyperarc_priority& lhs, const hyperarc_priority& rhs) const	{
+				return (lhs.first < rhs.first);
 			}
 		};
 		*/
@@ -45,37 +46,27 @@ namespace structHorn {
 		}
 
 		hyperarc_set shortest_nontrivial_hyperpath_gt0 (node_set source_nodes, node_set target_nodes) {
-			/*
-			std::map<search_node, size_t, compare_search_nodes> reach;
-			std::map<search_node, unsigned int, compare_search_nodes> dist;
-			std::map<search_node, int, compare_search_nodes> last;
+			hyperarc_set optimal_hyperpath;
+			
+			std::unordered_map<int, bool> node_reach;
+			std::unordered_map<int, size_t> hyperarc_reach;
+			std::unordered_map<int, unsigned int> node_dist;
+			std::unordered_map<int, unsigned int> hyperarc_dist;
+			std::unordered_map<int, int> last_hyperarc;
+
+			// std::priority_queue<hyperarc_priority, std::vector<hyperarc_priority>, hyperarc_priority_comparison>;
 
 			// initialize data structures
 			for (int node : this->nodes) {
-				search_node snode(node, node_type::simple);
-				reach[snode] = 1;
-				dist[snode] = INT_MAX;
-				last[snode] = INT_MAX;
+				node_reach[node] = false;
+				node_dist[node] = INT_MAX;
+				last_hyperarc[node] = INT_MAX;
 			}
 
 			for (const auto& [hyperarc, source_nodes] : this->source_nodes) {
-				search_node snode(hyperarc, node_type::compound);
-				reach[snode] = source_nodes.size();
-				dist[snode] = INT_MAX;
+				hyperarc_reach[hyperarc] = source_nodes.size();
+				hyperarc_dist[hyperarc] = INT_MAX;
 			}
-
-			std::cout << "\n";
-			for (const auto& [snode, x] : reach) {
-				std::cout << "(" << snode.first << ", ";
-				if (snode.second == node_type::simple) {
-					std::cout << "simple";
-				}
-				else {
-					std::cout << "compund";
-				}
-				std::cout << ") -> " << x << "\n";
-			}
-			*/
 
 			// TODO: implement Distance and Scan
 
@@ -83,7 +74,7 @@ namespace structHorn {
 
 			// TODO: zero the weights of the optimal hyperpath arcs
 
-			// TODO: return optimal hyperpath
+			return optimal_hyperpath;
 		}
 
 		friend std::ostream& operator<<(std::ostream& out, hypergraph& g);

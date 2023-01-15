@@ -51,7 +51,7 @@ void test_hypergraph() {
 	source.insert(0);
 	node_set target;
 	target.insert(4);
-	// g.shortest_nontrivial_hyperpath_gt0(source,target);
+	g.shortest_nontrivial_hyperpath_gt0(source,target);
 }
 
 int main()
