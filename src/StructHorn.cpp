@@ -29,18 +29,18 @@ void test_hypergraph() {
 	node_multiset sources4;
 	sources4.insert(1);
 	sources4.insert(3);
-	g.insert_hyperarc(4, sources4, 2);
+	g.insert_hyperarc(4, sources4, 2, 2);
 
 	node_multiset sources5;
 	sources5.insert(1);
 	sources5.insert(3);
-	g.insert_hyperarc(5, sources5, 1);
+	g.insert_hyperarc(5, sources5, 1, 2);
 
 	node_multiset sources6;
 	sources6.insert(1);
 	sources6.insert(3);
 	sources6.insert(3);
-	g.insert_hyperarc(6, sources6, 1);
+	g.insert_hyperarc(6, sources6, 1, 3);
 
 	node_multiset sources7;
 	sources7.insert(1);
@@ -49,88 +49,21 @@ void test_hypergraph() {
 	cout << g;
 
 	hyperarc_set optimal_hyperpath = g.shortest_nontrivial_hyperpath_gt0();
-	cout << "\nOptimal hyperpath: {";
-	bool first_hyperarc = true;
-	for (int hyperarc : optimal_hyperpath) {
-		if (first_hyperarc) {
-			first_hyperarc = false;
-			cout << hyperarc;
+	while (!optimal_hyperpath.empty()) {
+		cout << "\nOptimal hyperpath: {";
+		bool first_hyperarc = true;
+		for (int hyperarc : optimal_hyperpath) {
+			if (first_hyperarc) {
+				first_hyperarc = false;
+				cout << hyperarc;
+			}
+			else {
+				cout << ", " << hyperarc;
+			}
 		}
-		else {
-			cout << ", " << hyperarc;
-		}
+		cout << "}\n";
+		optimal_hyperpath = g.shortest_nontrivial_hyperpath_gt0();
 	}
-	cout << "}\n";
-
-	optimal_hyperpath = g.shortest_nontrivial_hyperpath_gt0();
-	cout << "\nOptimal hyperpath: {";
-	first_hyperarc = true;
-	for (int hyperarc : optimal_hyperpath) {
-		if (first_hyperarc) {
-			first_hyperarc = false;
-			cout << hyperarc;
-		}
-		else {
-			cout << ", " << hyperarc;
-		}
-	}
-	cout << "}\n";
-
-	optimal_hyperpath = g.shortest_nontrivial_hyperpath_gt0();
-	cout << "\nOptimal hyperpath: {";
-	first_hyperarc = true;
-	for (int hyperarc : optimal_hyperpath) {
-		if (first_hyperarc) {
-			first_hyperarc = false;
-			cout << hyperarc;
-		}
-		else {
-			cout << ", " << hyperarc;
-		}
-	}
-	cout << "}\n";
-
-	optimal_hyperpath = g.shortest_nontrivial_hyperpath_gt0();
-	cout << "\nOptimal hyperpath: {";
-	first_hyperarc = true;
-	for (int hyperarc : optimal_hyperpath) {
-		if (first_hyperarc) {
-			first_hyperarc = false;
-			cout << hyperarc;
-		}
-		else {
-			cout << ", " << hyperarc;
-		}
-	}
-	cout << "}\n";
-
-	optimal_hyperpath = g.shortest_nontrivial_hyperpath_gt0();
-	cout << "\nOptimal hyperpath: {";
-	first_hyperarc = true;
-	for (int hyperarc : optimal_hyperpath) {
-		if (first_hyperarc) {
-			first_hyperarc = false;
-			cout << hyperarc;
-		}
-		else {
-			cout << ", " << hyperarc;
-		}
-	}
-	cout << "}\n";
-
-	optimal_hyperpath = g.shortest_nontrivial_hyperpath_gt0();
-	cout << "\nOptimal hyperpath: {";
-	first_hyperarc = true;
-	for (int hyperarc : optimal_hyperpath) {
-		if (first_hyperarc) {
-			first_hyperarc = false;
-			cout << hyperarc;
-		}
-		else {
-			cout << ", " << hyperarc;
-		}
-	}
-	cout << "}\n";
 }
 
 int main()

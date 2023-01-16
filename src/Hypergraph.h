@@ -3,18 +3,17 @@
 #include <iostream>
 #include <set>
 #include <unordered_map>
-// #include <vector>
 
 namespace structHorn {
 	
 	typedef std::set<int> node_set;
 	typedef std::multiset<int> node_multiset;
 	typedef std::set<int> hyperarc_set;
-	// typedef std::vector<int> hyperarc_vec;
 	typedef std::unordered_map<int, hyperarc_set> out_hyperarcs_map;
 	typedef std::unordered_map<int, node_multiset> source_nodes_map;
 	typedef std::unordered_map<int, int> target_node_map;
 	typedef std::unordered_map<int, bool> reachable_map;
+	typedef std::unordered_map<int, unsigned int> weights_map;
 
 	class hypergraph {
 	private:
@@ -26,11 +25,13 @@ namespace structHorn {
 		out_hyperarcs_map out_hyperarcs; // node -> outgoing hyperarcs
 		source_nodes_map source_nodes; // hyperarc -> source nodes
 		target_node_map target_node; // hyperarc -> target node
+		weights_map weight; // hyperarc -> weight
 			
 	public:
 		hypergraph (int init_node, int err_node) : init_node(init_node), err_node(err_node) {}
 
-		void insert_hyperarc (int hyperarc, node_multiset source_nodes, int target_node) {
+		// TODO: insert all hyperarcs in the constructor and delete this function
+		void insert_hyperarc (int hyperarc, node_multiset source_nodes, int target_node, int weight = 1) {
 			for (int source_node : source_nodes) {
 				this->out_hyperarcs[source_node].insert(hyperarc);
 				this->nodes.insert(source_node);
@@ -38,6 +39,7 @@ namespace structHorn {
 			this->nodes.insert(target_node);
 			this->source_nodes[hyperarc] = source_nodes;
 			this->target_node[hyperarc] = target_node;
+			this->weight[hyperarc] = weight;
 		}
 
 		hyperarc_set shortest_nontrivial_hyperpath_gt0 () {
@@ -66,12 +68,15 @@ namespace structHorn {
 			sources_to_scan.insert(init_node);
 			for (int node : sources_to_scan) {
 				for (int hyperarc : out_hyperarcs[node]) {
+					if (weight[hyperarc] == 0) {
+						continue;
+					}
 					hyperarc_unscanned_sources[hyperarc]--;
 					if (hyperarc_unscanned_sources[hyperarc] == 0) {
 						hyperarc_dist[hyperarc] = 0;
 						int target = target_node[hyperarc];
-						if (node_dist[target] > 1) {
-							node_dist[target] = 1;
+						if (node_dist[target] > weight[hyperarc]) {
+							node_dist[target] = weight[hyperarc];
 							last_hyperarc[target] = hyperarc;
 						}
 					}
@@ -97,6 +102,9 @@ namespace structHorn {
 
 				// scan the minimal node
 				for (int hyperarc : out_hyperarcs[min_node]) {
+					if (weight[hyperarc] == 0) {
+						continue;
+					}
 					hyperarc_unscanned_sources[hyperarc]--;
 					if (hyperarc_unscanned_sources[hyperarc] == 0) {
 						
@@ -110,8 +118,8 @@ namespace structHorn {
 
 						// visit the target of the hyperarc
 						int target = target_node[hyperarc];
-						if (node_dist[target] > hyperarc_dist[hyperarc] + 1) {
-							node_dist[target] = hyperarc_dist[hyperarc] + 1;
+						if (node_dist[target] > hyperarc_dist[hyperarc] + weight[hyperarc]) {
+							node_dist[target] = hyperarc_dist[hyperarc] + weight[hyperarc];
 							last_hyperarc[target] = hyperarc;
 						}
 					}
@@ -134,6 +142,8 @@ namespace structHorn {
 				}
 				it++;
 			}
+
+			std::cout << "\nOptimal hyperpath weight: " << min_dist;
 
 			// construct the optimal hyperpath
 			if (last_hyperarc[min_node] != INT_MAX) {
@@ -159,17 +169,12 @@ namespace structHorn {
 				}
 			}
 
-			// remove the optimal hyperpath hyperarcs from the hypergraph and mark their target nodes as reachable
+			// zero the weights of the optimal hyperpath hyperarcs and mark their target nodes as reachable
 			for (int hyperarc : optimal_hyperpath) {
+				weight[hyperarc] = 0;
 				if (this->target_node[hyperarc] != err_node) {
 					reachable.insert(target_node[hyperarc]);
 				}
-				
-				for (int source_node : this->source_nodes[hyperarc]) {
-					out_hyperarcs[source_node].erase(hyperarc);
-				}
-				this->source_nodes.erase(hyperarc);
-				this->target_node.erase(hyperarc);
 			}
 
 			return optimal_hyperpath;
