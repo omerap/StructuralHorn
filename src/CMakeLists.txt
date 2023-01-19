@@ -3,10 +3,10 @@
 #
 
 # Add source to this project's executable.
-add_executable (StructHorn "StructHorn.cpp" "StructHorn.h" "Hypergraph.h")
+add_executable (StructuralHorn "StructuralHorn.cpp" "StructuralHorn.h" "Hypergraph.h")
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
-  set_property(TARGET StructHorn PROPERTY CXX_STANDARD 20)
+  set_property(TARGET StructuralHorn PROPERTY CXX_STANDARD 20)
 endif()
 
 # TODO: Add tests and install targets if needed.

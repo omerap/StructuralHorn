@@ -1,11 +1,11 @@
 ﻿// StructHorn.cpp : Defines the entry point for the application.
 //
 
-#include "StructHorn.h"
+#include "StructuralHorn.h"
 #include "Hypergraph.h"
 
 using namespace std;
-using namespace structHorn;
+using namespace structuralHorn;
 
 void test_hypergraph() {
 	hypergraph g(0,4);

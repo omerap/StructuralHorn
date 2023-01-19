@@ -4,7 +4,7 @@
 #include <set>
 #include <unordered_map>
 
-namespace structHorn {
+namespace structuralHorn {
 	
 	typedef std::set<int> node_set;
 	typedef std::multiset<int> node_multiset;
