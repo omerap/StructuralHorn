@@ -4,6 +4,8 @@
 #include <set>
 #include <unordered_map>
 
+#include "Global.h"
+
 namespace structuralHorn {
 	
 	typedef std::set<int> node_set;
@@ -13,7 +15,7 @@ namespace structuralHorn {
 	typedef std::unordered_map<int, node_multiset> source_nodes_map;
 	typedef std::unordered_map<int, int> target_node_map;
 	typedef std::unordered_map<int, bool> reachable_map;
-	typedef std::unordered_map<int, unsigned int> weights_map;
+	typedef std::unordered_map<int, size_t> weights_map;
 
 	class hypergraph {
 	private:
@@ -31,7 +33,7 @@ namespace structuralHorn {
 		hypergraph (int init_node, int err_node) : init_node(init_node), err_node(err_node) {}
 
 		// TODO: insert all hyperarcs in the constructor and delete this function
-		void insert_hyperarc (int hyperarc, node_multiset source_nodes, int target_node, int weight = 1) {
+		void insert_hyperarc (int hyperarc, node_multiset source_nodes, int target_node) {
 			for (int source_node : source_nodes) {
 				this->out_hyperarcs[source_node].insert(hyperarc);
 				this->nodes.insert(source_node);
@@ -39,7 +41,12 @@ namespace structuralHorn {
 			this->nodes.insert(target_node);
 			this->source_nodes[hyperarc] = source_nodes;
 			this->target_node[hyperarc] = target_node;
-			this->weight[hyperarc] = weight;
+			if (gParams.hyperarc_weight_distance_measure == 0) {
+				this->weight[hyperarc] = source_nodes.size();
+			}
+			else {
+				this->weight[hyperarc] = 1;
+			}
 		}
 
 		hyperarc_set shortest_nontrivial_hyperpath_gt0 () {
@@ -47,20 +54,20 @@ namespace structuralHorn {
 			
 			node_set nodes_to_scan(this->nodes);
 			std::unordered_map<int, size_t> hyperarc_unscanned_sources;
-			std::unordered_map<int, unsigned int> node_dist;
-			std::unordered_map<int, unsigned int> hyperarc_dist;
+			std::unordered_map<int, size_t> node_dist;
+			std::unordered_map<int, size_t> hyperarc_dist;
 			std::unordered_map<int, int> last_hyperarc;
 
 			// initialize data structures
 			for (int node : this->nodes) {
-				node_dist[node] = INT_MAX;
+				node_dist[node] = SIZE_MAX;
 				last_hyperarc[node] = INT_MAX;
 			}
 
 			for (const auto& [hyperarc, source_nodes] : this->source_nodes) {
 				node_set unique_source_nodes(source_nodes.cbegin(), source_nodes.cend());
 				hyperarc_unscanned_sources[hyperarc] = unique_source_nodes.size();
-				hyperarc_dist[hyperarc] = INT_MAX;
+				hyperarc_dist[hyperarc] = SIZE_MAX;
 			}
 
 			// scan init_node and reachable nodes
@@ -89,7 +96,7 @@ namespace structuralHorn {
 				
 				// find unscanned node with minimal distance
 				auto it = nodes_to_scan.cbegin();
-				unsigned int min_dist = node_dist[*it];
+				size_t min_dist = node_dist[*it];
 				int min_node = *it;
 				it++;
 				while (it != nodes_to_scan.cend()) {
@@ -110,12 +117,22 @@ namespace structuralHorn {
 						
 						// compute hyperarc distance
 						hyperarc_dist[hyperarc] = 0;
-						for (int hyperarc_source : source_nodes[hyperarc]) {
-							if ((hyperarc_source != init_node) && (reachable.count(hyperarc_source) == 0)) {
-								hyperarc_dist[hyperarc] += node_dist[hyperarc_source];
+						if (gParams.hyperarc_sources_distance_measure == 0) {
+							node_set unique_source_nodes(source_nodes[hyperarc].cbegin(), source_nodes[hyperarc].cend());
+							for (int hyperarc_source : unique_source_nodes) {
+								if ((hyperarc_source != init_node) && (reachable.count(hyperarc_source) == 0)) {
+									hyperarc_dist[hyperarc] += node_dist[hyperarc_source];
+								}
 							}
 						}
-
+						else {
+							for (int hyperarc_source : source_nodes[hyperarc]) {
+								if ((hyperarc_source != init_node) && (reachable.count(hyperarc_source) == 0)) {
+									hyperarc_dist[hyperarc] += node_dist[hyperarc_source];
+								}
+							}
+						}
+						
 						// visit the target of the hyperarc
 						int target = target_node[hyperarc];
 						if (node_dist[target] > hyperarc_dist[hyperarc] + weight[hyperarc]) {
@@ -132,7 +149,7 @@ namespace structuralHorn {
 			node_set targets_to_check(reachable);
 			targets_to_check.insert(err_node);
 			auto it = targets_to_check.cbegin();
-			unsigned int min_dist = node_dist[*it];
+			size_t min_dist = node_dist[*it];
 			int min_node = *it;
 			it++;
 			while (it != targets_to_check.cend()) {
@@ -143,7 +160,7 @@ namespace structuralHorn {
 				it++;
 			}
 
-			std::cout << "\nOptimal hyperpath weight: " << min_dist;
+			// std::cout << "\nOptimal hyperpath weight: " << min_dist;
 
 			// construct the optimal hyperpath
 			if (last_hyperarc[min_node] != INT_MAX) {
@@ -222,7 +239,8 @@ namespace structuralHorn {
 					out << ", " << source_node;
 				}
 			}
-			out << "}     \t--[" << hyperarc << "]--> " << g.target_node[hyperarc] << "\n";
+			out << "}     \t--[" << hyperarc << "]--> " << g.target_node[hyperarc] 
+				<< "\tweight = " << g.weight[hyperarc] << "\n";
 		}
 		out << "=================================================================\n";
 		return out;
