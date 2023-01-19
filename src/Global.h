@@ -31,9 +31,9 @@ namespace structuralHorn {
     inline std::ostream& logs() { return std::cerr; }
     /// verbose
     inline std::ostream& vout() { return std::cout; }
-} // namespace iterativeHorn
+} 
 
 #define VERBOSE(LVL, CODE)                                                     \
   do {                                                                         \
-    if (LVL <= ::iterativeHorn::gParams.verbosity) { CODE; }                             \
+    if (LVL <= ::structuralHorn::gParams.verbosity) { CODE; }                             \
   } while (0)
