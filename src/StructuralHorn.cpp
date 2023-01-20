@@ -7,10 +7,12 @@
 #include <string>
 
 #include "boost/program_options.hpp"
+#include "z3++.h"
 
 using namespace std;
 using namespace structuralHorn;
 namespace po = boost::program_options;
+using namespace z3;
 
 std::string parseCmdLine(int argc, char** argv) {
     po::options_description generic("Options");
@@ -153,10 +155,31 @@ void test_hypergraph() {
 	// sources = g.get_out_hyperarcs(13);
 
 	int hyperarc = 6;
-	cout << "\nTarget node of hyperarc " << hyperarc << ": " << g.get_target_node(hyperarc) << "\n";
+	cout << "\nTarget node of hyperarc " << hyperarc << ": " << g.get_target_node(hyperarc) << "\n\n";
 
 	//hyperarc = -2;
 	//cout << "\nTarget node of hyperarc " << hyperarc << ": " << g.get_target_node(hyperarc) << "\n";
+}
+
+void demorgan() {
+	std::cout << "de-Morgan\n";
+
+	context c;
+
+	expr x = c.bool_const("x");
+	expr y = c.bool_const("y");
+	expr conjecture = (!(x && y)) == (!x || !y);
+
+	solver s(c);
+	// adding the negation of the conjecture as a constraint.
+	s.add(!conjecture);
+	std::cout << s << "\n";
+	std::cout << s.to_smt2() << "\n";
+	switch (s.check()) {
+	case unsat:   std::cout << "de-Morgan is valid\n"; break;
+	case sat:     std::cout << "de-Morgan is not valid\n"; break;
+	case unknown: std::cout << "unknown\n"; break;
+	}
 }
 
 int main(int argc, char** argv)
@@ -164,6 +187,7 @@ int main(int argc, char** argv)
 	std::string fileName = parseCmdLine(argc, argv);
 	try {
 		test_hypergraph();
+		demorgan();
 	}
 	catch (std::exception& ex) {
 		std::cout << ex.what();
