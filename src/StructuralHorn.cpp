@@ -79,41 +79,41 @@ std::string parseCmdLine(int argc, char** argv) {
 void test_hypergraph() {
 	hypergraph g(0,4);
 
-	node_multiset sources0;
-	sources0.insert(0);
-	g.insert_hyperarc(0, sources0, 1);
-
 	node_multiset sources1;
-	sources1.insert(1);
-	g.insert_hyperarc(1, sources1, 2);
+	sources1.insert(0);
+	g.insert_hyperarc(1, sources1, 1);
 
 	node_multiset sources2;
-	sources2.insert(2);
-	g.insert_hyperarc(2, sources2, 3);
+	sources2.insert(1);
+	g.insert_hyperarc(2, sources2, 2);
 
 	node_multiset sources3;
 	sources3.insert(2);
 	g.insert_hyperarc(3, sources3, 3);
 
 	node_multiset sources4;
-	sources4.insert(1);
-	sources4.insert(3);
-	g.insert_hyperarc(4, sources4, 2);
+	sources4.insert(2);
+	g.insert_hyperarc(4, sources4, 3);
 
 	node_multiset sources5;
 	sources5.insert(1);
 	sources5.insert(3);
-	g.insert_hyperarc(5, sources5, 1);
+	g.insert_hyperarc(5, sources5, 2);
 
 	node_multiset sources6;
 	sources6.insert(1);
-	sources6.insert(3);
 	sources6.insert(3);
 	g.insert_hyperarc(6, sources6, 1);
 
 	node_multiset sources7;
 	sources7.insert(1);
-	g.insert_hyperarc(7, sources7, 4);
+	sources7.insert(3);
+	sources7.insert(3);
+	g.insert_hyperarc(7, sources7, 1);
+
+	node_multiset sources8;
+	sources8.insert(1);
+	g.insert_hyperarc(8, sources8, 4);
 
 	cout << g;
 
@@ -131,13 +131,42 @@ void test_hypergraph() {
 			}
 		}
 		cout << "}\n";
+		cout << g;
 		optimal_hyperpath = g.shortest_nontrivial_hyperpath_gt0();
 	}
+
+	int node = 1;
+	hyperarc_set sources = g.get_out_hyperarcs(node);
+	cout << "\nOutgoing hyperarcs of node " << node << ": {";
+	bool first_hyperarc = true;
+	for (int hyperarc : sources) {
+		if (first_hyperarc) {
+			first_hyperarc = false;
+			cout << hyperarc;
+		}
+		else {
+			cout << ", " << hyperarc;
+		}
+	}
+	cout << "}\n";
+
+	// sources = g.get_out_hyperarcs(13);
+
+	int hyperarc = 6;
+	cout << "\nTarget node of hyperarc " << hyperarc << ": " << g.get_target_node(hyperarc) << "\n";
+
+	//hyperarc = -2;
+	//cout << "\nTarget node of hyperarc " << hyperarc << ": " << g.get_target_node(hyperarc) << "\n";
 }
 
 int main(int argc, char** argv)
 {
 	std::string fileName = parseCmdLine(argc, argv);
-	test_hypergraph();
+	try {
+		test_hypergraph();
+	}
+	catch (std::exception& ex) {
+		std::cout << ex.what();
+	}
 	return 0;
 }

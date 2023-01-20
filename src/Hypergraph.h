@@ -3,6 +3,7 @@
 #include <iostream>
 #include <set>
 #include <unordered_map>
+#include <exception>
 
 #include "Global.h"
 
@@ -16,6 +17,20 @@ namespace structuralHorn {
 	typedef std::unordered_map<int, int> target_node_map;
 	typedef std::unordered_map<int, bool> reachable_map;
 	typedef std::unordered_map<int, size_t> weights_map;
+
+	struct invalidNodeId : public std::exception {
+	public:
+		const char* what() const throw () {
+			return "Invalid node id. The id should be between 0 and number of predicates + 1";
+		}
+	};
+
+	struct invalidHyperarcId : public std::exception {
+	public:
+		const char* what() const throw () {
+			return "Invalid hyperarc id. The id should be between 1 and number of clauses";
+		}
+	};
 
 	class hypergraph {
 	private:
@@ -195,6 +210,21 @@ namespace structuralHorn {
 			}
 
 			return optimal_hyperpath;
+		}
+
+		hyperarc_set get_out_hyperarcs(int node) {
+			// assert(0 <= init_node && node <= this->err_node);
+			if (node < this->init_node || node > this->err_node) {
+				throw invalidNodeId();
+			}
+			return this->out_hyperarcs[node];
+		}
+
+		int get_target_node(int hyperarc) {
+			if (this->target_node.count(hyperarc) == 0) {
+				throw invalidHyperarcId();
+			}
+			return this->target_node[hyperarc];
 		}
 
 		friend std::ostream& operator<<(std::ostream& out, hypergraph& g);
