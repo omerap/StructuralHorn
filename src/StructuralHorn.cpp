@@ -182,12 +182,41 @@ void demorgan() {
 	}
 }
 
+void test_fixedpoint() {
+	context c;
+	fixedpoint fp(c);
+	expr_vector queries = fp.from_file("C:\\Users\\omer.r\\source\\repos\\chc-comp22-benchmarks\\LIA\\chc-LIA_001.smt2");
+	for (const expr& query : queries) {
+		cout << query << "\n";
+	}
+	expr_vector assertions = fp.assertions();
+	cout << "assertions:\n";
+	int i = 0;
+	for (expr assertion : assertions) {
+		cout << assertion << "\n";
+		symbol name = c.str_symbol(("rule" + std::to_string(i)).c_str());
+		fp.add_rule(assertion, name);
+		i++;
+	}
+
+	expr_vector rules = fp.rules();
+	cout << "\nrules:\n";
+	for (const expr& rule : rules) {
+		cout << rule << "\n";
+	}
+
+	expr false_expr = c.bool_val(false);
+	cout << "\nquery: " << fp.query(false_expr);
+	cout << "\nanswer: " << fp.get_answer();
+}
+
 int main(int argc, char** argv)
 {
 	std::string fileName = parseCmdLine(argc, argv);
 	try {
-		test_hypergraph();
-		demorgan();
+		// test_hypergraph();
+		// demorgan();
+		test_fixedpoint();
 	}
 	catch (std::exception& ex) {
 		std::cout << ex.what();
