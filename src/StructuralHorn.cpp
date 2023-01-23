@@ -45,17 +45,17 @@ std::string parseCmdLine(int argc, char** argv) {
         po::notify(vm);
 
         if (vm.count("help")) {
-            cout << generic << "\n";
+			std::cout << generic << "\n";
             std::exit(1);
         }
 
         if (vm.count("print-params")) {
-            cout << gParams << "\n";
+			std::cout << gParams << "\n";
             std::exit(1);
         }
 
         if (vm.count("version")) {
-            cout << "StructuralHorn (" << 0 << ")\n";
+			std::cout << "StructuralHorn (" << 0 << ")\n";
             std::exit(1);
         }
 
@@ -72,7 +72,7 @@ std::string parseCmdLine(int argc, char** argv) {
 		return "";
     }
     catch (std::exception& e) {
-        cout << "Error: " << e.what() << "\n";
+		std::cout << "Error: " << e.what() << "\n";
         std::exit(1);
     }
 }
@@ -117,45 +117,45 @@ void test_hypergraph() {
 	sources8.insert(1);
 	g.insert_hyperarc(8, sources8, 4);
 
-	cout << g;
+	std::cout << g;
 
 	hyperarc_set optimal_hyperpath = g.shortest_nontrivial_hyperpath_gt0();
 	while (!optimal_hyperpath.empty()) {
-		cout << "\nOptimal hyperpath: {";
+		std::cout << "\nOptimal hyperpath: {";
 		bool first_hyperarc = true;
 		for (int hyperarc : optimal_hyperpath) {
 			if (first_hyperarc) {
 				first_hyperarc = false;
-				cout << hyperarc;
+				std::cout << hyperarc;
 			}
 			else {
-				cout << ", " << hyperarc;
+				std::cout << ", " << hyperarc;
 			}
 		}
-		cout << "}\n";
-		cout << g;
+		std::cout << "}\n";
+		std::cout << g;
 		optimal_hyperpath = g.shortest_nontrivial_hyperpath_gt0();
 	}
 
 	int node = 1;
 	hyperarc_set sources = g.get_out_hyperarcs(node);
-	cout << "\nOutgoing hyperarcs of node " << node << ": {";
+	std::cout << "\nOutgoing hyperarcs of node " << node << ": {";
 	bool first_hyperarc = true;
 	for (int hyperarc : sources) {
 		if (first_hyperarc) {
 			first_hyperarc = false;
-			cout << hyperarc;
+			std::cout << hyperarc;
 		}
 		else {
-			cout << ", " << hyperarc;
+			std::cout << ", " << hyperarc;
 		}
 	}
-	cout << "}\n";
+	std::cout << "}\n";
 
 	// sources = g.get_out_hyperarcs(13);
 
 	int hyperarc = 6;
-	cout << "\nTarget node of hyperarc " << hyperarc << ": " << g.get_target_node(hyperarc) << "\n\n";
+	std::cout << "\nTarget node of hyperarc " << hyperarc << ": " << g.get_target_node(hyperarc) << "\n\n";
 
 	//hyperarc = -2;
 	//cout << "\nTarget node of hyperarc " << hyperarc << ": " << g.get_target_node(hyperarc) << "\n";
@@ -182,32 +182,105 @@ void demorgan() {
 	}
 }
 
+void exists_expr_vector_example() {
+	std::cout << "exists expr_vector example\n";
+	context c;
+	const unsigned N = 10;
+
+	expr_vector xs(c);
+	expr x(c);
+	expr b(c);
+	b = c.bool_val(true);
+
+	for (unsigned i = 0; i < N; i++) {
+		std::stringstream x_name;
+		x_name << "x_" << i;
+		x = c.int_const(x_name.str().c_str());
+		xs.push_back(x);
+		b = b && x >= 0;
+	}
+
+	expr ex(c);
+	ex = exists(xs, b);
+	std::cout << ex << std::endl;
+}
+
 void test_fixedpoint() {
 	context c;
 	fixedpoint fp(c);
 	expr_vector queries = fp.from_file("C:\\Users\\omer.r\\source\\repos\\chc-comp22-benchmarks\\LIA\\chc-LIA_001.smt2");
 	for (const expr& query : queries) {
-		cout << query << "\n";
+		std::cout << query << "\n";
 	}
 	expr_vector assertions = fp.assertions();
-	cout << "assertions:\n";
+	// cout << "assertions:\n";
 	int i = 0;
+	expr query(c);
+	func_decl_vector decl_vec(c);
 	for (expr assertion : assertions) {
-		cout << assertion << "\n";
-		symbol name = c.str_symbol(("rule" + std::to_string(i)).c_str());
-		fp.add_rule(assertion, name);
-		i++;
+		// cout << assertion << "\n";
+		expr head_expr = assertion.body().arg(1);
+		func_decl head_decl = head_expr.decl();
+		if (head_expr.is_false()) {
+			std::cout << "\n" << assertion << "\n";
+			std::cout << "\n" << assertion.body() << "\n";
+			std::cout << "\n" << Z3_get_quantifier_num_bound(c, assertion) << "\n";
+			std::cout << "\n" << symbol(c, Z3_get_quantifier_bound_name(c, assertion ,0)) << "\n";
+			std::cout << "\n" << z3::sort(c, Z3_get_quantifier_bound_sort(c, assertion, 0)) << "\n";
+			std::cout << "\n" << symbol(c, Z3_get_quantifier_bound_name(c, assertion, 1)) << "\n";
+			std::cout << "\n" << z3::sort(c, Z3_get_quantifier_bound_sort(c, assertion, 1)) << "\n";
+
+			expr_vector variables(c);
+			for (int j = 0; j < Z3_get_quantifier_num_bound(c, assertion); j++) {
+				symbol sym = symbol(c, Z3_get_quantifier_bound_name(c, assertion, j));
+				expr var = c.constant(sym, z3::sort(c, Z3_get_quantifier_bound_sort(c, assertion, j)));
+				variables.push_back(var);
+				std::cout << "\n" << var << " " << var.get_sort() << "\n";
+			}
+			query = exists(variables, assertion.body().arg(0));
+			std::cout << "\nthe query is: " << query;
+		}
+		else {
+			fp.register_relation(head_decl);
+			symbol name = c.str_symbol(("rule" + std::to_string(i)).c_str());
+			fp.add_rule(assertion, name);
+			i++;
+			decl_vec.push_back(head_decl);
+		}
 	}
 
-	expr_vector rules = fp.rules();
-	cout << "\nrules:\n";
-	for (const expr& rule : rules) {
-		cout << rule << "\n";
-	}
 
-	expr false_expr = c.bool_val(false);
-	cout << "\nquery: " << fp.query(false_expr);
-	cout << "\nanswer: " << fp.get_answer();
+	//expr false_expr = c.bool_val(false);
+	std::cout << "\nquery: " << fp.query(query);
+	std::cout << "\nanswer: " << fp.get_answer();
+
+	//for (func_decl decl : decl_vec) {
+		//std::cout << decl << "\n";
+	//}
+
+	func_decl decl = decl_vec[0];
+	std::cout << decl.name() << ":\n";
+	for (int j = 0; j < fp.get_num_levels(decl); j++) {
+		std::cout << "level " << j << ": \n" << fp.get_cover_delta(j, decl) << "\n\n";
+	}
+	std::cout << "level -1:\n" << fp.get_cover_delta(-1, decl) << "\n\n";
+
+	decl = decl_vec[17];
+	std::cout << decl.name() << ":\n";
+	for (int j = 0; j < fp.get_num_levels(decl); j++) {
+		std::cout << "level " << j << ": \n" << fp.get_cover_delta(j, decl) << "\n\n";
+	}
+	std::cout << "level -1:\n" << fp.get_cover_delta(-1, decl) << "\n\n";
+
+	expr assertion = fp.assertions()[16];
+	std::cout << "\n" << assertion << "\n";
+	func_decl_vector funs(c);
+	decl = decl_vec[0];
+	funs.push_back(decl);
+	expr_vector bodies(c);
+	expr body = fp.get_cover_delta(-1, decl);
+	bodies.push_back(body);
+	std::cout << "\n" << assertion.substitute(funs, bodies) << "\n";
 }
 
 int main(int argc, char** argv)
@@ -216,6 +289,7 @@ int main(int argc, char** argv)
 	try {
 		// test_hypergraph();
 		// demorgan();
+		// exists_expr_vector_example();
 		test_fixedpoint();
 	}
 	catch (std::exception& ex) {
