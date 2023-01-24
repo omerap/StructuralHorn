@@ -11,18 +11,18 @@ namespace structuralHorn {
 		* The constructor of the class.
 		* 
 		* After creating a class object all member functions can be invoked.
-		* Therefore, the constructor should parse the input SMT file and initialize its internal fields.
+		* Therefore, the constructor should parse the input SMTLIB file and initialize its internal fields.
 		* Specifically, it should create:
 		* - A bijection between predicate symbols and int IDs.
 		*	If there are n predicate symbols, each predicate should be assigned an ID between 1 and n.
 		*	Also, 0 is reserved for init, which denotes the body of facts, and n+1 is reserved for error, which denotes the head of queries.
 		* - A bijection between clauses and int IDs.
-		*	If there are m clauses, each clause should be assigned an ID between 1 and m.
+		*	If there are m clauses, each clause should be assigned an ID between 0 and m-1.
 		* - A predicate interpretation initialized to true for all predicates.
 		* 
 		* @param file The SMT input file.
 		*/
-		virtual solver(char const* file) = 0;
+		// virtual solver(char const* file) = 0;
 
 		/**
 		* @return the number of predicates.

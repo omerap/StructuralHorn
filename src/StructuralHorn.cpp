@@ -1,13 +1,15 @@
 ﻿// StructHorn.cpp : Defines the entry point for the application.
 //
 
-#include "StructuralHorn.h"
-#include "Hypergraph.h"
-#include "Global.h"
 #include <string>
 
 #include "boost/program_options.hpp"
 #include "z3++.h"
+
+#include "StructuralHorn.h"
+#include "Hypergraph.h"
+#include "Global.h"
+#include "Spacer.h"
 
 using namespace std;
 using namespace structuralHorn;
@@ -170,7 +172,7 @@ void demorgan() {
 	expr y = c.bool_const("y");
 	expr conjecture = (!(x && y)) == (!x || !y);
 
-	solver s(c);
+	z3::solver s(c);
 	// adding the negation of the conjecture as a constraint.
 	s.add(!conjecture);
 	std::cout << s << "\n";
@@ -283,6 +285,69 @@ void test_fixedpoint() {
 	std::cout << "\n" << assertion.substitute(funs, bodies) << "\n";
 }
 
+void test_spacer_wrapper() {
+	spacer s("C:\\Users\\omer.r\\source\\repos\\chc-comp22-benchmarks\\LIA\\chc-LIA_001.smt2");
+
+	std::cout << "head predicates:\n";
+	const func_decl_vector& head_predicate_vec = s.get_head_predicate_vec();
+	for (int i = 0; i < head_predicate_vec.size(); i++) {
+		std::cout << "clause " << i << ": " << head_predicate_vec[i].name() << "\n";
+	}
+
+	std::cout << "\nbody predicates:\n";
+	const std::vector<func_decl_vector>& body_predicates_vec = s.get_body_predicates_vec();
+	for (int i = 0; i < body_predicates_vec.size(); i++) {
+		std::cout << "clause " << i << ": {";
+		const func_decl_vector& body_preds = body_predicates_vec[i];
+		for (int j = 0; j < body_preds.size(); j++) {
+			if (j == 0) {
+				std::cout << body_preds[j].name();
+			}
+			else {
+				std::cout << ", " << body_preds[j].name();
+			}
+		}
+		std::cout << "}\n";
+	}
+
+	std::cout << "\npredicate -> id:\n";
+	const std::map<func_decl, int, compare_func_decl>& predicate_id_map = s.get_predicate_id_map();
+	for (const auto& [predicate, id] : predicate_id_map) {
+		std::cout << predicate.name() << " -> " << id << "\n";
+	}
+
+	std::cout << "\npredicate -> interpretation:\n";
+	const std::map<func_decl, expr, compare_func_decl>& predicate_interpretation_map = s.get_predicate_interpretation_map();
+	for (const auto& [predicate, interp] : predicate_interpretation_map) {
+		std::cout << predicate.name() << " -> " << interp << "\n";
+	}
+
+	std::cout << "\nnumber of clauses: " << s.num_of_clauses() << "\n";
+	std::cout << "number of predicates: " << s.num_of_predicates() << "\n\n";
+	
+	for (int clause_id = 0; clause_id < s.num_of_clauses(); clause_id++) {
+		std::cout << "head predicate of clause " << clause_id << ": " << s.head_predicate(clause_id) << "\n";
+	}
+
+	std::cout << "\n";
+	for (int clause_id = 0; clause_id < s.num_of_clauses(); clause_id++) {
+		std::cout << "body predicates of clause " << clause_id << ": {";
+		std::multiset<int> body_preds = s.body_predicates(clause_id);
+		bool first_node = true;
+		for (int pred : body_preds) {
+			if (first_node) {
+				first_node = false;
+				std::cout << pred;
+			}
+			else {
+				std::cout << ", " << pred;
+			}
+		}
+		std::cout << "}\n";
+		//<< s.head_predicate(clause_id) << "\n";
+	}
+}
+
 int main(int argc, char** argv)
 {
 	std::string fileName = parseCmdLine(argc, argv);
@@ -290,7 +355,8 @@ int main(int argc, char** argv)
 		// test_hypergraph();
 		// demorgan();
 		// exists_expr_vector_example();
-		test_fixedpoint();
+		// test_fixedpoint();
+		test_spacer_wrapper();
 	}
 	catch (std::exception& ex) {
 		std::cout << ex.what();
