@@ -163,6 +163,82 @@ void test_hypergraph() {
 	//cout << "\nTarget node of hyperarc " << hyperarc << ": " << g.get_target_node(hyperarc) << "\n";
 }
 
+void test_hypergraph2() {
+	hypergraph g(0, 2);
+
+	node_multiset sources0;
+	sources0.insert(0);
+	g.insert_hyperarc(0, sources0, 1);
+
+	node_multiset sources1;
+	sources1.insert(0);
+	g.insert_hyperarc(1, sources1, 1);
+
+	node_multiset sources2;
+	sources2.insert(0);
+	g.insert_hyperarc(2, sources2, 1);
+
+	node_multiset sources3;
+	sources3.insert(0);
+	g.insert_hyperarc(3, sources3, 1);
+
+	node_multiset sources4;
+	sources4.insert(0);
+	g.insert_hyperarc(4, sources4, 1);
+
+	node_multiset sources5;
+	sources5.insert(1);
+	sources5.insert(1);
+	g.insert_hyperarc(5, sources5, 1);
+
+	node_multiset sources6;
+	sources6.insert(1);
+	g.insert_hyperarc(6, sources6, 2);
+
+	std::cout << g;
+
+	hyperarc_set optimal_hyperpath = g.shortest_nontrivial_hyperpath_gt0();
+	while (!optimal_hyperpath.empty()) {
+		std::cout << "\nOptimal hyperpath: {";
+		bool first_hyperarc = true;
+		for (int hyperarc : optimal_hyperpath) {
+			if (first_hyperarc) {
+				first_hyperarc = false;
+				std::cout << hyperarc;
+			}
+			else {
+				std::cout << ", " << hyperarc;
+			}
+		}
+		std::cout << "}\n";
+		std::cout << g;
+		optimal_hyperpath = g.shortest_nontrivial_hyperpath_gt0();
+	}
+
+	int node = 1;
+	hyperarc_set sources = g.get_out_hyperarcs(node);
+	std::cout << "\nOutgoing hyperarcs of node " << node << ": {";
+	bool first_hyperarc = true;
+	for (int hyperarc : sources) {
+		if (first_hyperarc) {
+			first_hyperarc = false;
+			std::cout << hyperarc;
+		}
+		else {
+			std::cout << ", " << hyperarc;
+		}
+	}
+	std::cout << "}\n";
+
+	// sources = g.get_out_hyperarcs(13);
+
+	int hyperarc = 6;
+	std::cout << "\nTarget node of hyperarc " << hyperarc << ": " << g.get_target_node(hyperarc) << "\n\n";
+
+	//hyperarc = -2;
+	//cout << "\nTarget node of hyperarc " << hyperarc << ": " << g.get_target_node(hyperarc) << "\n";
+}
+
 void demorgan() {
 	std::cout << "de-Morgan\n";
 
@@ -310,6 +386,22 @@ void test_spacer_wrapper() {
 		std::cout << "}\n";
 	}
 
+	std::cout << "\nbody predicates set:\n";
+	const std::vector<func_decl_vector>& body_predicates_set = s.get_body_predicates_set();
+	for (int i = 0; i < body_predicates_set.size(); i++) {
+		std::cout << "clause " << i << ": {";
+		const func_decl_vector& body_preds = body_predicates_set[i];
+		for (int j = 0; j < body_preds.size(); j++) {
+			if (j == 0) {
+				std::cout << body_preds[j].name();
+			}
+			else {
+				std::cout << ", " << body_preds[j].name();
+			}
+		}
+		std::cout << "}\n";
+	}
+
 	std::cout << "\npredicate -> id:\n";
 	const std::map<func_decl, int, compare_func_decl>& predicate_id_map = s.get_predicate_id_map();
 	for (const auto& [predicate, id] : predicate_id_map) {
@@ -346,17 +438,20 @@ void test_spacer_wrapper() {
 		std::cout << "}\n";
 		//<< s.head_predicate(clause_id) << "\n";
 	}
+
+	// s.amend_clause(17);
 }
 
 int main(int argc, char** argv)
 {
 	std::string fileName = parseCmdLine(argc, argv);
 	try {
-		// test_hypergraph();
+		//test_hypergraph();
+		test_hypergraph2();
 		// demorgan();
 		// exists_expr_vector_example();
 		// test_fixedpoint();
-		test_spacer_wrapper();
+		// test_spacer_wrapper();
 	}
 	catch (std::exception& ex) {
 		std::cout << ex.what();
