@@ -5,6 +5,7 @@
 
 #include "Solver.h"
 #include "jni.h"
+#include <iostream>
 
 namespace structuralHorn {
 

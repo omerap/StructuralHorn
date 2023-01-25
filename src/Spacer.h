@@ -83,7 +83,7 @@ namespace structuralHorn {
 		}
 
 	public:
-		spacer(char const* file) : fp(c), head_predicate_vec(c){
+		spacer(char const* file) : solver(file), fp(c), head_predicate_vec(c){
 			fp.from_file(file);
 			const expr_vector& assertions = fp.assertions();
 
