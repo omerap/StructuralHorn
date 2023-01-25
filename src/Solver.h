@@ -24,7 +24,6 @@ namespace structuralHorn {
         */
         solver(std::string fileName) {}
 	public:
-
 		/**
 		* @return the number of predicates.
 		*/
