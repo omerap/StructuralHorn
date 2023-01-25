@@ -8,6 +8,7 @@
 
 #include "boost/program_options.hpp"
 #include "z3++.h"
+#include "EldaricaSolver.h"
 
 using namespace std;
 using namespace structuralHorn;
@@ -185,6 +186,8 @@ void demorgan() {
 int main(int argc, char** argv)
 {
 	std::string fileName = parseCmdLine(argc, argv);
+    EldaricaSolver e_solver("file");
+    return 0;
 	try {
 		test_hypergraph();
 		demorgan();
