@@ -120,7 +120,58 @@ namespace structuralHorn {
 			return query;
 		}
 
-		// TODO: implement an auxiliary solve function
+		result solve_chcs(expr_vector& chcs, expr& query) {
+			// initialize solver
+			fixedpoint fp(c);
+			fp.set(init_params(c));
+
+			func_decl_set predicates;
+
+			// add the clauses and create the query
+			int i = 0;
+			for (expr clause : chcs) {
+				expr head_expr = clause.body().arg(1);
+				func_decl head_decl = head_expr.decl();
+				assert(!head_expr.is_false());
+				fp.register_relation(head_decl);
+				symbol name = c.str_symbol(("rule" + std::to_string(i)).c_str());
+				fp.add_rule(clause, name);
+				predicates.insert(head_decl);
+				i++;
+			}
+
+			// inject interpretations
+			for (func_decl predicate : predicates) {
+				auto it = predicate_interpretation_map.find(predicate);
+				assert(it != predicate_interpretation_map.end());
+				expr interp = it->second;
+				fp.add_cover(-1, predicate, interp);
+			}
+
+			// solve
+			assert(query.is_exists());
+			check_result spacer_res = fp.query(query);
+
+			// if unsat update interpretations
+			if (spacer_res == z3::unsat) {
+				for (func_decl predicate : predicates) {
+					expr interp = fp.get_cover_delta(-1, predicate);
+					auto it = predicate_interpretation_map.find(predicate);
+					assert(it != predicate_interpretation_map.end());
+					it->second = interp;
+				}
+			}
+
+			// TODO: if (print_res==true) then print the result and the interpretations/ground refutation to std::cout
+			if (spacer_res == z3::sat) {
+				return result::sat;
+			}
+			else if (spacer_res == z3::unsat) {
+
+				return result::unsat;
+			}
+			return result::unknown;
+		}
 
 	public:
 		spacer(char const* file) : c(), clauses(c), head_predicate_vec(c){
@@ -250,69 +301,28 @@ namespace structuralHorn {
 			return update;
 		}
 		
+		// this method assumes there is exactly one query in clause_ids
 		result solve(std::set<int> clause_ids, bool print_res = false) {
 			// assert all clauses have valid ids
 			for (int clause_id : clause_ids) {
 				assert(0 <= clause_id && clause_id < num_of_clauses());
 			}
 			
-			// initialize solver
-			fixedpoint fp(c);
-			fp.set(init_params(c));
-
+			expr_vector chcs(c);
 			expr query(c);
-			func_decl_set predicates;
-
-			// add the clauses and create the query
+			
 			for (int clause_id : clause_ids) {
 				expr clause = clauses[clause_id];
 				expr head_expr = clause.body().arg(1);
-				func_decl head_decl = head_expr.decl();
 				if (head_expr.is_false()) {
 					query = to_query(clause, clause_id);
 				}
 				else {
-					fp.register_relation(head_decl);
-					symbol name = c.str_symbol(("rule" + std::to_string(clause_id)).c_str());
-					fp.add_rule(clause, name);
-					predicates.insert(head_decl);
+					chcs.push_back(clause);
 				}
 			}
 
-			// inject interpretations
-			for (func_decl predicate : predicates) {
-				auto it = predicate_interpretation_map.find(predicate);
-				assert(it != predicate_interpretation_map.end());
-				expr interp = it->second;
-				fp.add_cover(-1, predicate, interp);
-			}
-
-			// solve
-			check_result spacer_res = fp.query(query);
-
-			// if unsat update interpretations
-			if (spacer_res == z3::unsat) {
-				for (func_decl predicate : predicates) {
-					expr interp = fp.get_cover_delta(-1, predicate);
-					auto it = predicate_interpretation_map.find(predicate);
-					assert(it != predicate_interpretation_map.end());
-					it->second = interp;
-				}
-			}
-
-			// TODO: if (print_res==true) then print the result and the interpretations/ground refutation to std::cout
-
-			if (spacer_res == z3::sat) {
-				if (print_res) {
-					std::cout << "\nground refutation:\n" << fp.get_answer() << "\n";
-				}
-				return result::sat;
-			}
-			else if (spacer_res == z3::unsat) {
-
-				return result::unsat;
-			}
-			return result::unknown;
+			return solve_chcs(chcs, query);
 		}
 
 		const func_decl_vector& get_head_predicate_vec() {
