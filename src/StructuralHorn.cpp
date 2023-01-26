@@ -79,6 +79,24 @@ std::string parseCmdLine(int argc, char** argv) {
     }
 }
 
+params init_params(context& c) {
+	// set_param("verbose", 0);
+	params params(c);
+	params.set("engine", "spacer");
+	params.set("fp.xform.slice", false);
+	params.set("fp.xform.inline_linear", false);
+	params.set("fp.xform.inline_eager", false);
+	
+	// params.set("fp.spacer.random_seed", gParams.random_seed);
+	// params.set("print_statistics", true);
+
+	// arrays
+	/*if (gParams.array_theory == 1) {
+		params.set("fp.spacer.ground_pobs", false);
+		params.set("fp.spacer.q3.use_qgen", true);
+	}*/
+	return params;
+}
 
 void test_hypergraph() {
 	hypergraph g(0,4);
@@ -327,8 +345,6 @@ void test_fixedpoint() {
 		}
 	}
 
-
-	//expr false_expr = c.bool_val(false);
 	std::cout << "\nquery: " << fp.query(query);
 	std::cout << "\nanswer: " << fp.get_answer();
 
@@ -337,13 +353,13 @@ void test_fixedpoint() {
 	//}
 
 	func_decl decl = decl_vec[0];
-	std::cout << decl.name() << ":\n";
+	std::cout << "\n" << decl.name() << ":\n";
 	for (int j = 0; j < fp.get_num_levels(decl); j++) {
 		std::cout << "level " << j << ": \n" << fp.get_cover_delta(j, decl) << "\n\n";
 	}
 	std::cout << "level -1:\n" << fp.get_cover_delta(-1, decl) << "\n\n";
 
-	decl = decl_vec[17];
+	decl = decl_vec[18];
 	std::cout << decl.name() << ":\n";
 	for (int j = 0; j < fp.get_num_levels(decl); j++) {
 		std::cout << "level " << j << ": \n" << fp.get_cover_delta(j, decl) << "\n\n";
@@ -359,6 +375,186 @@ void test_fixedpoint() {
 	expr body = fp.get_cover_delta(-1, decl);
 	bodies.push_back(body);
 	std::cout << "\n" << assertion.substitute(funs, bodies) << "\n";
+}
+
+void test_add_cover() {
+	context c;
+	fixedpoint fp(c);
+	fp.set(init_params(c));
+	fp.from_file("C:\\Users\\omer.r\\source\\repos\\chc-comp22-benchmarks\\LIA\\chc-LIA_001.smt2");
+	expr_vector assertions = fp.assertions();
+	int i = 0;
+	expr query(c);
+	func_decl_vector decl_vec(c);
+	for (expr assertion : assertions) {
+		expr head_expr = assertion.body().arg(1);
+		func_decl head_decl = head_expr.decl();
+		// std::cout << "head pred of assertion " << i << ": " << head_decl.name() << "\n";
+		if (head_expr.is_false()) {
+			expr_vector variables(c);
+			for (int j = 0; j < Z3_get_quantifier_num_bound(c, assertion); j++) {
+				symbol sym = symbol(c, Z3_get_quantifier_bound_name(c, assertion, j));
+				expr var = c.constant(sym, z3::sort(c, Z3_get_quantifier_bound_sort(c, assertion, j)));
+				variables.push_back(var);
+			}
+			query = exists(variables, assertion.body().arg(0));
+		}
+		else {
+			fp.register_relation(head_decl);
+			symbol name = c.str_symbol(("rule" + std::to_string(i)).c_str());
+			fp.add_rule(assertion, name);
+			i++;
+			decl_vec.push_back(head_decl);
+		}
+	}
+
+	func_decl pred = decl_vec[0];
+	expr interp = (c.variable(1, c.int_sort()) >= 1);
+	expr cover(c);
+
+	std::cout << "\n=====add interpretation before 1st query=====\n";
+	fp.add_cover(-1, pred, interp);
+	cover = fp.get_cover_delta(-1, pred);
+	std::cout << "\nthe cover of " << pred.name() << ":\n" << cover << "\n";
+
+	std::cout << "\n=====1st query=====\n\nres: " << fp.query(query) << "\n";
+	cover = fp.get_cover_delta(-1, pred);
+	std::cout << "\nthe cover of " << pred.name() << ":\n" << cover << "\n";
+
+	/*
+	std::cout << "\n=====add interpretation before 2nd query=====\n";
+	fp.add_cover(-1, pred, interp);
+	cover = fp.get_cover_delta(-1, pred);
+	std::cout << "\nthe cover of " << pred.name() << ":\n" << cover << "\n";
+	*/
+
+	std::cout << "\n=====2nd query=====\n\nres: " << fp.query(query) << "\n";
+	cover = fp.get_cover_delta(-1, pred);
+	std::cout << "\nthe cover of " << pred.name() << ":\n" << cover << "\n";
+
+	fixedpoint fp1(c);
+	fp1.set(init_params(c));
+	i = 0;
+	for (expr assertion : assertions) {
+		expr head_expr = assertion.body().arg(1);
+		func_decl head_decl = head_expr.decl();
+		if (!head_expr.is_false()) {
+			fp1.register_relation(head_decl);
+			symbol name = c.str_symbol(("rule" + std::to_string(i)).c_str());
+			fp1.add_rule(assertion, name);
+			i++;
+		}
+	}
+
+	std::cout << "\n=====new fixedpoint - add interpretation before 1st query=====\n";
+	fp1.add_cover(-1, pred, interp);
+	cover = fp1.get_cover_delta(-1, pred);
+	std::cout << "\nthe cover of " << pred.name() << ":\n" << cover << "\n";
+
+	std::cout << "\n=====new fixedpoint - 1st query=====\n\nres: " << fp1.query(query) << "\n";
+	cover = fp1.get_cover_delta(-1, pred);
+	std::cout << "\nthe cover of " << pred.name() << ":\n" << cover << "\n";
+
+	/*
+	std::cout << "\n=====new fixedpoint - add interpretation before 2nd query=====\n";
+	fp1.add_cover(-1, pred, interp);
+	cover = fp1.get_cover_delta(-1, pred);
+	std::cout << "\nthe cover of " << pred.name() << ":\n" << cover << "\n";
+
+	std::cout << "\n=====new fixedpoint - 2nd query=====\n\nres: " << fp1.query(query) << "\n";
+	cover = fp1.get_cover_delta(-1, pred);
+	std::cout << "\nthe cover of " << pred.name() << ":\n" << cover << "\n";
+	*/
+}
+
+void test_to_fact_and_to_query() {
+	context c;
+	fixedpoint fp(c);
+	fp.set(init_params(c));
+	fp.from_file("C:\\Users\\omer.r\\source\\repos\\chc-comp22-benchmarks\\LIA\\chc-LIA_001.smt2");
+	expr_vector assertions = fp.assertions();
+	int i = 0;
+	expr query(c);
+	func_decl_vector decl_vec(c);
+	for (expr assertion : assertions) {
+		expr head_expr = assertion.body().arg(1);
+		func_decl head_decl = head_expr.decl();
+		// std::cout << "head pred of assertion " << i << ": " << head_decl.name() << "\n";
+		if (head_expr.is_false()) {
+			expr_vector variables(c);
+			for (int j = 0; j < Z3_get_quantifier_num_bound(c, assertion); j++) {
+				symbol sym = symbol(c, Z3_get_quantifier_bound_name(c, assertion, j));
+				expr var = c.constant(sym, z3::sort(c, Z3_get_quantifier_bound_sort(c, assertion, j)));
+				variables.push_back(var);
+			}
+			query = exists(variables, assertion.body().arg(0));
+		}
+		else {
+			fp.register_relation(head_decl);
+			symbol name = c.str_symbol(("rule" + std::to_string(i)).c_str());
+			fp.add_rule(assertion, name);
+			i++;
+			decl_vec.push_back(head_decl);
+		}
+	}
+	fp.query(query);
+
+	expr assertion = assertions[17];
+	std::cout << "assertion:\n" << assertion << "\n";
+	func_decl pred = decl_vec[0];
+	expr cover = fp.get_cover_delta(-1, pred);
+	std::cout << "\nthe cover of " << pred.name() << ":\n" << cover << "\n";
+	func_decl pred1 = decl_vec[18];
+	expr cover1 = fp.get_cover_delta(-1, pred1);
+	std::cout << "\nthe cover of " << pred1.name() << ":\n" << cover1 << "\n";
+
+	func_decl_vector pred_vec(c);
+	pred_vec.push_back(pred);
+	pred_vec.push_back(pred1);
+	expr_vector cover_vec(c);
+	cover_vec.push_back(cover);
+	cover_vec.push_back(cover1);
+	expr body = assertion.body().arg(0);
+	expr new_body = body.substitute(pred_vec, cover_vec);
+	//std::cout << "\nthe body:\n" << body << "\n";
+	//std::cout << "\nthe new body:\n" << new_body << "\n";
+
+	expr_vector variables(c);
+	for (int j = 0; j < Z3_get_quantifier_num_bound(c, assertion); j++) {
+		symbol sym = symbol(c, Z3_get_quantifier_bound_name(c, assertion, j));
+		expr var = c.constant(sym, z3::sort(c, Z3_get_quantifier_bound_sort(c, assertion, j)));
+		variables.push_back(var);
+	}
+
+	expr fact = forall(variables, implies(new_body, assertion.body().arg(1)));
+	std::cout << "\nthe new fact:\n" << fact << "\n";
+	//std::cout << "\nthe new fact without the quantifier:\n" << fact.body() << "\n";
+
+	func_decl_vector pred_vec1(c);
+	pred_vec1.push_back(pred);
+	expr_vector cover_vec1(c);
+	cover_vec1.push_back(cover);
+	expr head = assertion.body().arg(1);
+	expr new_head = head.substitute(pred_vec1, cover_vec1);
+	//std::cout << "\nthe head:\n" << head << "\n";
+	//std::cout << "\nthe new head:\n" << new_head << "\n";
+
+	//std::cout << "\nnew_head:\n" << new_head << "\n";
+	//std::cout << "\n!(new_head):\n" << !(new_head) << "\n";
+	//std::cout << "\n(new_body && (!(new_head))):\n" << (new_body && (!(new_head))) << "\n";
+	//std::cout << "\nexists(new_body && (!(new_head))):\n" << exists(variables,(new_body && (!(new_head)))) << "\n";
+
+	expr query1 = exists(variables, (new_body && (!(new_head))));
+	std::cout << "\nthe new query:\n" << query1 << "\n";
+	// std::cout << "\nthe new query is:" << fp.query(query1) << "\n";
+
+	/*
+	std::cout << "\nmk_and experiment:\n";
+	std::cout << new_head << "\n";
+	std::cout << (new_head && new_head) << "\n";
+	std::cout << ((new_head && new_head) && new_head) << "\n";
+	std::cout << ((new_head && new_head) && new_head).simplify() << "\n";
+	*/
 }
 
 void test_spacer_wrapper() {
@@ -446,11 +642,13 @@ int main(int argc, char** argv)
 {
 	std::string fileName = parseCmdLine(argc, argv);
 	try {
-		//test_hypergraph();
-		test_hypergraph2();
+		// test_hypergraph();
+		// test_hypergraph2();
 		// demorgan();
 		// exists_expr_vector_example();
 		// test_fixedpoint();
+		test_add_cover();
+		// test_to_fact_and_to_query();
 		// test_spacer_wrapper();
 	}
 	catch (std::exception& ex) {
