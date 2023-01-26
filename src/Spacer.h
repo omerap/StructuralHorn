@@ -102,8 +102,8 @@ namespace structuralHorn {
 			const func_decl& predicate = head_predicate_vec[clause_id];
 			expr new_head = head;
 
-			// std::cout << "clause " << clause_id << ":\n" << clause << "\n";
-			if (predicate_id_map[predicate] != (num_of_predicates() + 1)) {
+			//std::cout << "clause " << clause_id << ":\n" << clause << "\n";
+			if (!head.is_false()) { // clause is not already a query
 				func_decl_vector predicate_vec(c);
 				predicate_vec.push_back(predicate);
 				expr_vector interpretation_vec(c);
@@ -114,7 +114,13 @@ namespace structuralHorn {
 			}
 
 			const expr_vector& variables = bound_variables_vec[clause_id];
-			expr query = exists(variables, (clause.body().arg(0) && (!(new_head))));
+			expr query(c);
+			if (head.is_false()) {
+				query = exists(variables, (clause.body().arg(0)));
+			}
+			else {
+				query = exists(variables, (clause.body().arg(0) && (!(new_head))));
+			}
 			
 			//std::cout << "query:\n" << query << "\n\n";
 			return query;

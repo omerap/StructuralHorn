@@ -633,18 +633,7 @@ void test_spacer_wrapper() {
 
 	std::cout << "\nnumber of clauses: " << s.num_of_clauses() << "\n";
 	std::cout << "number of predicates: " << s.num_of_predicates() << "\n";
-
-	/*
-	std::cout << "\n==========to_fact and to_query==========\n";
-	s.amend_clause(0);
-	s.amend_clause(2);
-	s.amend_clause(11);
-	s.amend_clause(16);
-	s.amend_clause(17);
-	s.amend_clause(18);
-	s.amend_clause(22);
-	*/
-
+	
 	std::cout << "\n==========solve==========\n";
 	std::set<int> clause_ids;
 	for (int i = 0; i < s.num_of_clauses(); i++) {
@@ -683,6 +672,17 @@ void test_spacer_wrapper() {
 	else {
 		std::cout << "unknown\n";
 	}
+
+	/*
+	std::cout << "\n==========to_fact and to_query==========\n";
+	s.amend_clause(0);
+	s.amend_clause(2);
+	s.amend_clause(11);
+	s.amend_clause(16);
+	s.amend_clause(17);
+	s.amend_clause(18);
+	s.amend_clause(22);
+	*/
 
 	/*
 	std::cout << "\n==========amend_clause==========\n";
