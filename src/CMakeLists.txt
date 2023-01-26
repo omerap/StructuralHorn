@@ -3,14 +3,10 @@
 #
 
 # Add source to this project's executable.
-add_executable (StructuralHorn "StructuralHorn.cpp" "StructuralHorn.h" "Hypergraph.h" "Global.h" "Global.cpp" "Solver.h" 
-Spacer.h EldaricaSolver.h)
+add_executable (StructuralHorn "StructuralHorn.cpp" "Global.cpp")
 
 link_directories()
 target_link_libraries( StructuralHorn ${Boost_LIBRARIES} ${Z3_LIBRARY} ${JAVA_JVM_LIBRARY})
-
-if (CMAKE_VERSION VERSION_GREATER 3.12)
-  set_property(TARGET StructuralHorn PROPERTY CXX_STANDARD 20)
-endif()
+#target_link_libraries( StructuralHorn ${Boost_LIBRARIES} ${Z3_LIBRARY} "-framework JavaVM")
 
 # TODO: Add tests and install targets if needed.
