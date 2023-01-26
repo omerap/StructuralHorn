@@ -68,7 +68,7 @@ namespace structuralHorn {
 		* The clauses in facts_ids should be considered as facts by substituting their body predicates with their interpretations (unless they are facts in the first place).
 		* The clause query_id should be considered as a query by substituting its head predicate with its interpretations (unless it is a query in the first place).
 		* 
-		* All other clauses (clauses in clause_ids\(facts_ids U {query_id})) contain fresh predicates (i.e., predicates that were not solved previously and therefore have an interpretation of true).
+		* All other clauses (clauses in clause_ids) contain fresh predicates (i.e., predicates that were not solved previously and therefore have an interpretation of true).
 		* It is necessary to update the interpretations of all fresh predicates if the interpretation of query_id is indeed implied.
 		* 
 		* @param clause_ids The IDs of the clauses that should be checked.

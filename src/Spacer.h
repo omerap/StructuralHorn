@@ -11,6 +11,25 @@
 using namespace z3;
 
 namespace structuralHorn {
+
+	params init_params(context& c) {
+		set_param("verbose", 0);
+		params params(c);
+		params.set("engine", "spacer");
+		params.set("fp.xform.slice", false);
+		params.set("fp.xform.inline_linear", false);
+		params.set("fp.xform.inline_eager", false);
+
+		// params.set("fp.spacer.random_seed", gParams.random_seed);
+		// params.set("print_statistics", true);
+
+		// arrays
+		/*if (gParams.array_theory == 1) {
+			params.set("fp.spacer.ground_pobs", false);
+			params.set("fp.spacer.q3.use_qgen", true);
+		}*/
+		return params;
+	}
 	
 	class compare_func_decl {
 	public:
@@ -24,11 +43,12 @@ namespace structuralHorn {
 	class spacer : public solver {
 	private:
 		context c;
-		fixedpoint fp;
-		
+		expr_vector clauses;
+				
 		func_decl_vector head_predicate_vec; // clause id -> head predicate
 		std::vector<func_decl_vector> body_predicates_vec; // clause id -> body predicates vector
 		std::vector<func_decl_vector> body_predicates_set; // clause id -> body predicates set
+		std::vector<expr_vector> bound_variables_vec; // clause id -> bound variables
 		std::map<func_decl, int, compare_func_decl> predicate_id_map; // predicate -> id
 		std::map<func_decl, expr, compare_func_decl> predicate_interpretation_map; // predicate -> interpretation
 
@@ -36,7 +56,7 @@ namespace structuralHorn {
 			assert(e.is_app());
 
 			// check if the current application expression is a predicate
-			if (predicate_id_map.count(e.decl()) != 0) {
+			if (predicate_id_map.count(e.decl()) != 0 && !e.is_true() && !e.is_false()) {
 				body_preds.push_back(e.decl());
 				return;
 			}
@@ -50,11 +70,17 @@ namespace structuralHorn {
 			}
 		}
 
-		// TODO: implement
-		expr to_fact(expr e, int clause_id) {
-			assert(e.is_forall());
-			expr body = e.body().arg(0);
+		expr to_fact(const expr& clause, int clause_id) {
+			assert(clause.is_forall());
+			expr body = clause.body().arg(0);
 			const func_decl_vector& predicates = body_predicates_set[clause_id];
+
+			//std::cout << "clause " << clause_id << ":\n" << clause << "\n";
+			if (predicates.size() == 1 && predicate_id_map[predicates[0]] == 0) {
+				//std::cout << "\nclause is already a fact\n\n";
+				return clause;
+			}
+
 			expr_vector interpretations(c);
 			for (int i = 0; i < predicates.size(); i++) {
 				const func_decl& pred = predicates[i];
@@ -63,54 +89,76 @@ namespace structuralHorn {
 			}
 			expr new_body = body.substitute(predicates, interpretations);
 			
-			expr_vector body_vec(c);
-			body_vec.push_back(body);
-			expr_vector new_body_vec(c);
-			new_body_vec.push_back(new_body);
+			const expr_vector& variables = bound_variables_vec[clause_id];
+			expr fact = forall(variables, implies(new_body, clause.body().arg(1)));
 			
-			expr fact = e.substitute(body_vec, new_body_vec);
-			std::cout << "\nto_fact:\ngiven expr:\n" << e << "\noutput:\n" << fact << "\n";
-			std::cout << "\nnew_body:\n" << new_body << "\n";
+			//std::cout << "\nfact:\n" << fact << "\n\n";
 			return fact;
 		}
 
-		// TODO: implement
-		expr from_forall_to_exist(const expr& e) {
-			assert(e.is_forall());
+		expr to_query(const expr& clause, int clause_id) {
+			assert(clause.is_forall());
+			expr head = clause.body().arg(1);
+			const func_decl& predicate = head_predicate_vec[clause_id];
+			expr new_head = head;
+
+			// std::cout << "clause " << clause_id << ":\n" << clause << "\n";
+			if (predicate_id_map[predicate] != (num_of_predicates() + 1)) {
+				func_decl_vector predicate_vec(c);
+				predicate_vec.push_back(predicate);
+				expr_vector interpretation_vec(c);
+				const expr& interp = predicate_interpretation_map.find(predicate)->second;
+				interpretation_vec.push_back(interp);
+
+				new_head = head.substitute(predicate_vec, interpretation_vec);
+			}
+
+			const expr_vector& variables = bound_variables_vec[clause_id];
+			expr query = exists(variables, (clause.body().arg(0) && (!(new_head))));
 			
-			expr res(c);
-			return res;
+			//std::cout << "query:\n" << query << "\n\n";
+			return query;
 		}
 
 	public:
-		spacer(char const* file) : fp(c), head_predicate_vec(c){
+		spacer(char const* file) : clauses(c), head_predicate_vec(c){
+			fixedpoint fp(c);
+			fp.set(init_params(c));
 			fp.from_file(file);
-			const expr_vector& assertions = fp.assertions();
-
-			// initialize head_predicate_vec, predicate_id_map and predicate_interpretation_map
-			for (int i = 0; i < assertions.size(); i++) {
-				assert(assertions[i].body().is_implies());
-				expr head_expr = assertions[i].body().arg(1);
+			clauses = fp.assertions();
+			
+			for (int i = 0; i < clauses.size(); i++) {
+				// initialize head_predicate_vec, predicate_id_map and predicate_interpretation_map
+				assert(clauses[i].body().is_implies());
+				expr head_expr = clauses[i].body().arg(1);
 				func_decl head_decl = head_expr.decl();
-				head_predicate_vec.push_back(head_decl);
+				head_predicate_vec.push_back(head_decl); 
 				if (!head_expr.is_false() && predicate_id_map.count(head_decl) == 0) {
 					int size = predicate_id_map.size();
 					predicate_id_map.emplace(head_decl, size + 1);
 					predicate_interpretation_map.emplace(head_decl, c.bool_val(true));
 				}
+
+				// initialize bound_variables_vec
+				expr_vector variables(c);
+				for (int j = 0; j < Z3_get_quantifier_num_bound(c, clauses[i]); j++) {
+					symbol sym = symbol(c, Z3_get_quantifier_bound_name(c, clauses[i], j));
+					expr var = c.constant(sym, z3::sort(c, Z3_get_quantifier_bound_sort(c, clauses[i], j)));
+					variables.push_back(var);
+				}
+				bound_variables_vec.push_back(variables);
 			}
 			predicate_id_map.emplace(c.bool_val(true).decl(), 0);
 			predicate_id_map.emplace(c.bool_val(false).decl(), predicate_id_map.size());
 
 			// initialize body_predicates_vec and body_predicates_set
-			for (int i = 0; i < assertions.size(); i++) {
+			for (int i = 0; i < clauses.size(); i++) {
 				func_decl_vector body_preds(c);
-				get_body_predicates(assertions[i].body().arg(0), body_preds);
+				get_body_predicates(clauses[i].body().arg(0), body_preds);
 				if (body_preds.empty()) {
 					body_preds.push_back(c.bool_val(true).decl());
 				}
-				body_predicates_vec.push_back(body_preds);
-
+				
 				func_decl_set body_preds_set;
 				for (int j = 0; j < body_preds.size(); j++) {
 					body_preds_set.insert(body_preds[j]);
@@ -119,6 +167,8 @@ namespace structuralHorn {
 				for (const func_decl& decl : body_preds_set) {
 					body_preds_set_vec.push_back(decl);
 				}
+
+				body_predicates_vec.push_back(body_preds);
 				body_predicates_set.push_back(body_preds_set_vec);
 			}
 		}
@@ -148,7 +198,7 @@ namespace structuralHorn {
 		// TODO: implement
 		bool amend_clause(int clause_id) {
 			assert(0 <= clause_id && clause_id < num_of_clauses());
-			to_fact(fp.assertions()[clause_id], clause_id);
+			to_query(to_fact(clauses[clause_id], clause_id), clause_id);
 			return false;
 		}
 
@@ -172,6 +222,10 @@ namespace structuralHorn {
 
 		const std::vector<func_decl_vector>& get_body_predicates_set() {
 			return body_predicates_set;
+		}
+
+		const std::vector<expr_vector>& get_bound_variables_vec() {
+			return bound_variables_vec;
 		}
 
 		const std::map<func_decl, int, compare_func_decl>& get_predicate_id_map() {

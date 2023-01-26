@@ -79,25 +79,6 @@ std::string parseCmdLine(int argc, char** argv) {
     }
 }
 
-params init_params(context& c) {
-	// set_param("verbose", 0);
-	params params(c);
-	params.set("engine", "spacer");
-	params.set("fp.xform.slice", false);
-	params.set("fp.xform.inline_linear", false);
-	params.set("fp.xform.inline_eager", false);
-	
-	// params.set("fp.spacer.random_seed", gParams.random_seed);
-	// params.set("print_statistics", true);
-
-	// arrays
-	/*if (gParams.array_theory == 1) {
-		params.set("fp.spacer.ground_pobs", false);
-		params.set("fp.spacer.q3.use_qgen", true);
-	}*/
-	return params;
-}
-
 void test_hypergraph() {
 	hypergraph g(0,4);
 
@@ -412,26 +393,41 @@ void test_add_cover() {
 	expr interp = (c.variable(1, c.int_sort()) >= 1);
 	expr cover(c);
 
+	
 	std::cout << "\n=====add interpretation before 1st query=====\n";
 	fp.add_cover(-1, pred, interp);
 	cover = fp.get_cover_delta(-1, pred);
 	std::cout << "\nthe cover of " << pred.name() << ":\n" << cover << "\n";
+	
 
 	std::cout << "\n=====1st query=====\n\nres: " << fp.query(query) << "\n";
 	cover = fp.get_cover_delta(-1, pred);
 	std::cout << "\nthe cover of " << pred.name() << ":\n" << cover << "\n";
 
-	/*
+	expr false_expr = c.bool_val(false);
+	std::cout << "\n=====false query=====\n\nres: " << fp.query(false_expr) << "\n";
+	cover = fp.get_cover_delta(-1, pred);
+	std::cout << "\nthe cover of " << pred.name() << ":\n" << cover << "\n";
+
 	std::cout << "\n=====add interpretation before 2nd query=====\n";
 	fp.add_cover(-1, pred, interp);
 	cover = fp.get_cover_delta(-1, pred);
 	std::cout << "\nthe cover of " << pred.name() << ":\n" << cover << "\n";
-	*/
 
 	std::cout << "\n=====2nd query=====\n\nres: " << fp.query(query) << "\n";
 	cover = fp.get_cover_delta(-1, pred);
 	std::cout << "\nthe cover of " << pred.name() << ":\n" << cover << "\n";
 
+	/*
+	std::cout << "\n=====add interpretation before 3rd query=====\n";
+	fp.add_cover(-1, pred, interp);
+	cover = fp.get_cover_delta(-1, pred);
+	std::cout << "\nthe cover of " << pred.name() << ":\n" << cover << "\n";
+
+	std::cout << "\n=====3rd query=====\n\nres: " << fp.query(query) << "\n";
+	cover = fp.get_cover_delta(-1, pred);
+	std::cout << "\nthe cover of " << pred.name() << ":\n" << cover << "\n";
+	*/
 	fixedpoint fp1(c);
 	fp1.set(init_params(c));
 	i = 0;
@@ -446,6 +442,7 @@ void test_add_cover() {
 		}
 	}
 
+	/*
 	std::cout << "\n=====new fixedpoint - add interpretation before 1st query=====\n";
 	fp1.add_cover(-1, pred, interp);
 	cover = fp1.get_cover_delta(-1, pred);
@@ -454,8 +451,7 @@ void test_add_cover() {
 	std::cout << "\n=====new fixedpoint - 1st query=====\n\nres: " << fp1.query(query) << "\n";
 	cover = fp1.get_cover_delta(-1, pred);
 	std::cout << "\nthe cover of " << pred.name() << ":\n" << cover << "\n";
-
-	/*
+	
 	std::cout << "\n=====new fixedpoint - add interpretation before 2nd query=====\n";
 	fp1.add_cover(-1, pred, interp);
 	cover = fp1.get_cover_delta(-1, pred);
@@ -560,16 +556,20 @@ void test_to_fact_and_to_query() {
 void test_spacer_wrapper() {
 	spacer s("C:\\Users\\omer.r\\source\\repos\\chc-comp22-benchmarks\\LIA\\chc-LIA_001.smt2");
 
-	std::cout << "head predicates:\n";
 	const func_decl_vector& head_predicate_vec = s.get_head_predicate_vec();
-	for (int i = 0; i < head_predicate_vec.size(); i++) {
-		std::cout << "clause " << i << ": " << head_predicate_vec[i].name() << "\n";
-	}
-
-	std::cout << "\nbody predicates:\n";
 	const std::vector<func_decl_vector>& body_predicates_vec = s.get_body_predicates_vec();
-	for (int i = 0; i < body_predicates_vec.size(); i++) {
-		std::cout << "clause " << i << ": {";
+	const std::vector<func_decl_vector>& body_predicates_set = s.get_body_predicates_set();
+	const std::map<func_decl, int, compare_func_decl>& predicate_id_map = s.get_predicate_id_map();
+	const std::map<func_decl, expr, compare_func_decl>& predicate_interpretation_map = s.get_predicate_interpretation_map();
+	const std::vector<expr_vector>& bound_variables_vec = s.get_bound_variables_vec();
+
+	std::cout << "\n==========clauses==========\n";
+	for (int i = 0; i < s.num_of_clauses(); i++) {
+		std::cout << "\n=====clause " << i << "=====\n";
+		std::cout << "head predicate:\t\t" << head_predicate_vec[i].name() << "\n";
+		std::cout << "head predicate id:\t" << s.head_predicate(i) << "\n";
+
+		std::cout << "body predicates:\t{";
 		const func_decl_vector& body_preds = body_predicates_vec[i];
 		for (int j = 0; j < body_preds.size(); j++) {
 			if (j == 0) {
@@ -580,49 +580,23 @@ void test_spacer_wrapper() {
 			}
 		}
 		std::cout << "}\n";
-	}
 
-	std::cout << "\nbody predicates set:\n";
-	const std::vector<func_decl_vector>& body_predicates_set = s.get_body_predicates_set();
-	for (int i = 0; i < body_predicates_set.size(); i++) {
-		std::cout << "clause " << i << ": {";
-		const func_decl_vector& body_preds = body_predicates_set[i];
-		for (int j = 0; j < body_preds.size(); j++) {
+		std::cout << "body predicates set:\t{";
+		const func_decl_vector& body_preds_set = body_predicates_set[i];
+		for (int j = 0; j < body_preds_set.size(); j++) {
 			if (j == 0) {
-				std::cout << body_preds[j].name();
+				std::cout << body_preds_set[j].name();
 			}
 			else {
-				std::cout << ", " << body_preds[j].name();
+				std::cout << ", " << body_preds_set[j].name();
 			}
 		}
 		std::cout << "}\n";
-	}
 
-	std::cout << "\npredicate -> id:\n";
-	const std::map<func_decl, int, compare_func_decl>& predicate_id_map = s.get_predicate_id_map();
-	for (const auto& [predicate, id] : predicate_id_map) {
-		std::cout << predicate.name() << " -> " << id << "\n";
-	}
-
-	std::cout << "\npredicate -> interpretation:\n";
-	const std::map<func_decl, expr, compare_func_decl>& predicate_interpretation_map = s.get_predicate_interpretation_map();
-	for (const auto& [predicate, interp] : predicate_interpretation_map) {
-		std::cout << predicate.name() << " -> " << interp << "\n";
-	}
-
-	std::cout << "\nnumber of clauses: " << s.num_of_clauses() << "\n";
-	std::cout << "number of predicates: " << s.num_of_predicates() << "\n\n";
-	
-	for (int clause_id = 0; clause_id < s.num_of_clauses(); clause_id++) {
-		std::cout << "head predicate of clause " << clause_id << ": " << s.head_predicate(clause_id) << "\n";
-	}
-
-	std::cout << "\n";
-	for (int clause_id = 0; clause_id < s.num_of_clauses(); clause_id++) {
-		std::cout << "body predicates of clause " << clause_id << ": {";
-		std::multiset<int> body_preds = s.body_predicates(clause_id);
+		std::cout << "body predicates ids:\t{";
+		std::multiset<int> body_preds_ids = s.body_predicates(i);
 		bool first_node = true;
-		for (int pred : body_preds) {
+		for (int pred : body_preds_ids) {
 			if (first_node) {
 				first_node = false;
 				std::cout << pred;
@@ -632,10 +606,42 @@ void test_spacer_wrapper() {
 			}
 		}
 		std::cout << "}\n";
-		//<< s.head_predicate(clause_id) << "\n";
+
+		std::cout << "bound variables:\t{";
+		const expr_vector& variables = bound_variables_vec[i];
+		for (int j = 0; j < variables.size(); j++) {
+			if (j == 0) {
+				std::cout << variables[j];
+			}
+			else {
+				std::cout << ", " << variables[j];
+			}
+		}
+		std::cout << "}\n";
 	}
 
-	// s.amend_clause(17);
+	std::cout << "\n==========predicates==========\n";
+	for (const auto& [predicate, id] : predicate_id_map) {
+		std::cout << "\n=====" << predicate.name() << "=====\n";
+		std::cout << "id: " << id << "\n";
+		for (const auto& [predicate1, interp] : predicate_interpretation_map) {
+			if (predicate.id() == predicate1.id()) {
+				std::cout << "interpretation: " << interp << "\n";
+			}
+		}
+	}
+
+	std::cout << "\nnumber of clauses: " << s.num_of_clauses() << "\n";
+	std::cout << "number of predicates: " << s.num_of_predicates() << "\n";
+
+	std::cout << "\n==========to_fact and to_query==========\n";
+	s.amend_clause(0);
+	s.amend_clause(2);
+	s.amend_clause(11);
+	s.amend_clause(16);
+	s.amend_clause(17);
+	s.amend_clause(18);
+	s.amend_clause(22);
 }
 
 int main(int argc, char** argv)
@@ -647,9 +653,9 @@ int main(int argc, char** argv)
 		// demorgan();
 		// exists_expr_vector_example();
 		// test_fixedpoint();
-		test_add_cover();
+		// test_add_cover();
 		// test_to_fact_and_to_query();
-		// test_spacer_wrapper();
+		test_spacer_wrapper();
 	}
 	catch (std::exception& ex) {
 		std::cout << ex.what();
