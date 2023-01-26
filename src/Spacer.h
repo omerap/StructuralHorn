@@ -120,8 +120,10 @@ namespace structuralHorn {
 			return query;
 		}
 
+		// TODO: implement an auxiliary solve function
+
 	public:
-		spacer(char const* file) : clauses(c), head_predicate_vec(c){
+		spacer(char const* file) : c(), clauses(c), head_predicate_vec(c){
 			fixedpoint fp(c);
 			fp.set(init_params(c));
 			fp.from_file(file);
@@ -198,17 +200,118 @@ namespace structuralHorn {
 		// TODO: implement
 		bool amend_clause(int clause_id) {
 			assert(0 <= clause_id && clause_id < num_of_clauses());
-			to_query(to_fact(clauses[clause_id], clause_id), clause_id);
-			return false;
+
+			expr clause = clauses[clause_id];
+			std::cout << "\nclause " << clause_id << ":\n" << clause << "\n";
+			assert(!clause.body().arg(1).is_false()); // assert clause_id is not a query
+
+			bool update = false;
+			
+			// substitute body predicates with their interpretations
+			expr fact = to_fact(clause, clause_id);
+			std::cout << "\nfact:\n" << fact << "\n";
+
+			// TODO: create conjuncts vector from the interpretation of the head predicate
+
+			// TODO: check which conjuncts are implied
+
+			// TODO: update the interpretation of the head predicate if needed
+
+			return update;
 		}
 
 		// TODO: implement
 		bool amend_clauses(std::set<int> clause_ids, std::set<int> facts_ids, int query_id) {
-			return false;
+			// assert all clauses have valid ids
+			for (int clause_id : clause_ids) {
+				assert(0 <= clause_id && clause_id < num_of_clauses());
+			}
+			for (int clause_id : facts_ids) {
+				assert(0 <= clause_id && clause_id < num_of_clauses());
+			}
+			assert(0 <= query_id && query_id < num_of_clauses());
+
+			expr query = clauses[query_id];
+			assert(!query.body().arg(1).is_false()); // assert query_id is not already a query
+
+			bool update = false;
+
+			// TODO: substitute body predicates of all clauses in facts_ids with their interpretations
+
+			// TODO: create clauses vector from clause_ids and new facts_ids
+
+			// TODO: create conjuncts vector from the interpretation of the head predicate of query_id
+
+			// TODO: check incrementally which conjuncts are implied
+			// update the interpretations of the head predicates of (facts_ids U clause_ids) accordingly
+
+			// TODO: update the interpretation of the head predicate of query_id if needed
+
+			return update;
 		}
 		
-		// TODO: implement
 		result solve(std::set<int> clause_ids, bool print_res = false) {
+			// assert all clauses have valid ids
+			for (int clause_id : clause_ids) {
+				assert(0 <= clause_id && clause_id < num_of_clauses());
+			}
+			
+			// initialize solver
+			fixedpoint fp(c);
+			fp.set(init_params(c));
+
+			expr query(c);
+			func_decl_set predicates;
+
+			// add the clauses and create the query
+			for (int clause_id : clause_ids) {
+				expr clause = clauses[clause_id];
+				expr head_expr = clause.body().arg(1);
+				func_decl head_decl = head_expr.decl();
+				if (head_expr.is_false()) {
+					query = to_query(clause, clause_id);
+				}
+				else {
+					fp.register_relation(head_decl);
+					symbol name = c.str_symbol(("rule" + std::to_string(clause_id)).c_str());
+					fp.add_rule(clause, name);
+					predicates.insert(head_decl);
+				}
+			}
+
+			// inject interpretations
+			for (func_decl predicate : predicates) {
+				auto it = predicate_interpretation_map.find(predicate);
+				assert(it != predicate_interpretation_map.end());
+				expr interp = it->second;
+				fp.add_cover(-1, predicate, interp);
+			}
+
+			// solve
+			check_result spacer_res = fp.query(query);
+
+			// if unsat update interpretations
+			if (spacer_res == z3::unsat) {
+				for (func_decl predicate : predicates) {
+					expr interp = fp.get_cover_delta(-1, predicate);
+					auto it = predicate_interpretation_map.find(predicate);
+					assert(it != predicate_interpretation_map.end());
+					it->second = interp;
+				}
+			}
+
+			// TODO: if (print_res==true) then print the result and the interpretations/ground refutation to std::cout
+
+			if (spacer_res == z3::sat) {
+				if (print_res) {
+					std::cout << "\nground refutation:\n" << fp.get_answer() << "\n";
+				}
+				return result::sat;
+			}
+			else if (spacer_res == z3::unsat) {
+
+				return result::unsat;
+			}
 			return result::unknown;
 		}
 
