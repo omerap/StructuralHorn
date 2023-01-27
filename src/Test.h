@@ -687,4 +687,91 @@ namespace structuralHorn {
 			std::cout << "\nthe satisfiability of the set of chcs is unknown\n";
 		}
 	}
+
+	void test_chccomp21_LIA_Lin() {
+		std::string base("C:\\Users\\omer.r\\source\\repos\\chc-comp21-benchmarks\\LIA-Lin\\");
+		std::string name("chc-LIA-Lin_");
+		std::string number;
+		std::string type(".smt2");
+
+		for (int i = 0; i < 10; i++) {
+			number = "00" + std::to_string(i);
+			structural_horn s((base + name + number + type).c_str());
+			std::cout << (name + number);
+			try {
+				result res = s.solve();
+				if (res == result::sat) {
+					std::cout << ",SAT\n";
+				}
+				else if (res == result::unsat) {
+					std::cout << ",UNSAT\n";
+				}
+				else {
+					std::cout << ",UNKNOWN\n";
+				}
+			}
+			catch (std::exception& ex) {
+				std::cout << ",UNKNOWN\n";
+				//vout() << ex.what() << "\n";
+			}
+		}
+
+		for (int i = 10; i < 100; i++) {
+			number = "0" + std::to_string(i);
+			structural_horn s((base + name + number + type).c_str());
+			std::cout << (name + number);
+			try {
+				result res = s.solve();
+				if (res == result::sat) {
+					std::cout << ",SAT\n";
+				}
+				else if (res == result::unsat) {
+					std::cout << ",UNSAT\n";
+				}
+				else {
+					std::cout << ",UNKNOWN\n";
+				}
+			}
+			catch (std::exception& ex) {
+				std::cout << ",UNKNOWN\n";
+				//vout() << ex.what() << "\n";
+			}
+		}
+
+		/*
+		for (int i = 100; i < 585; i++) {
+			number = "0" + std::to_string(i);
+			structural_horn s((base + name + number + type).c_str());
+			std::cout << (name + number);
+			try {
+				result res = s.solve();
+				if (res == result::sat) {
+					std::cout << ",SAT\n";
+				}
+				else if (res == result::unsat) {
+					std::cout << ",UNSAT\n";
+				}
+				else {
+					std::cout << ",UNKNOWN\n";
+				}
+			}
+			catch (std::exception& ex) {
+				std::cout << ",UNKNOWN\n";
+				//vout() << ex.what() << "\n";
+			}
+		}*/
+	}
+
+	void test_main(std::string fileName) {
+		// test_hypergraph();
+		// test_hypergraph2();
+		// demorgan();
+		// exists_expr_vector_example();
+		// test_fixedpoint();
+		// test_add_cover();
+		// test_to_fact_and_to_query();
+		// test_spacer_wrapper();
+		// test_structural_horn(fileName);
+		test_chccomp21_LIA_Lin();
+	}
 }

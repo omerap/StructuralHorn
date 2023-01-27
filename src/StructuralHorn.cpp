@@ -166,15 +166,7 @@ int main(int argc, char** argv)
             }
         }
         else {
-            // test_hypergraph();
-            // test_hypergraph2();
-            // demorgan();
-            // exists_expr_vector_example();
-            // test_fixedpoint();
-            // test_add_cover();
-            // test_to_fact_and_to_query();
-            // test_spacer_wrapper();
-            test_structural_horn(fileName);
+            test_main(fileName);
         }
 	}
 	catch (std::exception& ex) {
