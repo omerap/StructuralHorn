@@ -684,11 +684,11 @@ void test_spacer_wrapper() {
 	s.amend_clause(22);
 	*/
 
-	/*
+	
 	std::cout << "\n==========amend_clause==========\n";
-	bool update = s.amend_clause(17);
+	bool update = s.amend_clause(16);
 	std::cout << "\n" << update << "\n";
-	*/
+	
 }
 
 int main(int argc, char** argv)
