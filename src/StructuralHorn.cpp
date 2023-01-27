@@ -634,7 +634,47 @@ void test_spacer_wrapper() {
 
 	std::cout << "\nnumber of clauses: " << s.num_of_clauses() << "\n";
 	std::cout << "number of predicates: " << s.num_of_predicates() << "\n";
+	
+	std::cout << "\n==========solve==========\n";
+	std::set<int> clause_ids;
+	for (int i = 0; i < s.num_of_clauses(); i++) {
+		clause_ids.insert(i);
+	}
+	result res = s.solve(clause_ids);
+	std::cout << "\nquery all clauses\nresult: ";
+	if (res == result::sat) {
+		std::cout << "sat\n";
+	}
+	else if (res == result::unsat) {
+		std::cout << "unsat\n";
+	}
+	else {
+		std::cout << "unknown\n";
+	}
+	std::cout << "\n==========predicates==========\n";
+	for (const auto& [predicate, id] : predicate_id_map) {
+		std::cout << "\n=====" << predicate.name() << "=====\n";
+		std::cout << "id: " << id << "\n";
+		for (const auto& [predicate1, interp] : predicate_interpretation_map) {
+			if (predicate.id() == predicate1.id()) {
+				std::cout << "interpretation: " << interp << "\n";
+			}
+		}
+	}
 
+	res = s.solve(clause_ids);
+	std::cout << "\nquery all clauses again\nresult: ";
+	if (res == result::sat) {
+		std::cout << "sat\n";
+	}
+	else if (res == result::unsat) {
+		std::cout << "unsat\n";
+	}
+	else {
+		std::cout << "unknown\n";
+	}
+
+	/*
 	std::cout << "\n==========to_fact and to_query==========\n";
 	s.amend_clause(0);
 	s.amend_clause(2);
@@ -643,6 +683,31 @@ void test_spacer_wrapper() {
 	s.amend_clause(17);
 	s.amend_clause(18);
 	s.amend_clause(22);
+	*/
+
+	
+	std::cout << "\n==========amend_clause==========\n";
+	bool update = s.amend_clause(16);
+	std::cout << "\n" << update << "\n";
+
+	std::cout << "\n==========amend_clauses==========\n";
+	clause_ids.clear();
+	std::set<int> facts_ids;
+	facts_ids.insert(15);
+	int query_id = 16;
+	update = s.amend_clauses(clause_ids, facts_ids, query_id);
+	std::cout << "\n" << update << "\n";
+
+	std::cout << "\n==========predicates==========\n";
+	for (const auto& [predicate, id] : predicate_id_map) {
+		std::cout << "\n=====" << predicate.name() << "=====\n";
+		std::cout << "id: " << id << "\n";
+		for (const auto& [predicate1, interp] : predicate_interpretation_map) {
+			if (predicate.id() == predicate1.id()) {
+				std::cout << "interpretation: " << interp << "\n";
+			}
+		}
+	}
 }
 
 int main(int argc, char** argv)
