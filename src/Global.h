@@ -8,6 +8,10 @@ namespace structuralHorn {
     struct SHParams {
         // std::string fName;
 
+        /* Underlying chc solver
+            0 - spacer, 1 - eldarica*/
+        unsigned chc_solver;
+
         /* Data structure of hyperarc sources when measuring hyperpaths
             0 - set, 1 - multiset*/
         unsigned hyperarc_sources_distance_measure;

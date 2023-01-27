@@ -93,7 +93,38 @@ namespace structuralHorn {
 			const expr_vector& variables = bound_variables_vec[clause_id];
 			expr fact = forall(variables, implies(new_body, clause.body().arg(1)));
 			
-			std::cout << "\nfact:\n" << fact << "\n\n";
+			//std::cout << "\nfact:\n" << fact << "\n\n";
+			return fact;
+		}
+
+		expr substitute_body_preds(const expr& clause, int clause_id, const std::set<int>& predicates_to_substitute) {
+			assert(clause.is_forall());
+			expr body = clause.body().arg(0);
+			const func_decl_vector& all_predicates = body_predicates_set[clause_id];
+
+			//std::cout << "clause " << clause_id << ":\n" << clause << "\n";
+			if (all_predicates.size() == 1 && predicate_id_map[all_predicates[0]] == 0) {
+				//std::cout << "\nclause is already a fact\n\n";
+				return clause;
+			}
+
+			func_decl_vector predicates(c);
+			expr_vector interpretations(c);
+			for (int i = 0; i < all_predicates.size(); i++) {
+				func_decl pred = all_predicates[i];
+				if (predicates_to_substitute.count(predicate_id_map[pred]) > 0) {
+					predicates.push_back(pred);
+					const expr& interp = predicate_interpretation_map.find(pred)->second;
+					interpretations.push_back(interp);
+				}
+			}
+
+			expr new_body = body.substitute(predicates, interpretations);
+
+			const expr_vector& variables = bound_variables_vec[clause_id];
+			expr fact = forall(variables, implies(new_body, clause.body().arg(1)));
+
+			//std::cout << "\nfact:\n" << fact << "\n\n";
 			return fact;
 		}
 
@@ -199,6 +230,13 @@ namespace structuralHorn {
 
 				return result::unsat;
 			}
+
+			// if unknown then reset the interpretation
+			for (func_decl predicate : predicates) {
+				auto it = predicate_interpretation_map.find(predicate);
+				assert(it != predicate_interpretation_map.end());
+				it->second = c.bool_val(true);
+			}
 			return result::unknown;
 		}
 
@@ -231,7 +269,8 @@ namespace structuralHorn {
 				bound_variables_vec.push_back(variables);
 			}
 			predicate_id_map.emplace(c.bool_val(true).decl(), 0);
-			predicate_id_map.emplace(c.bool_val(false).decl(), predicate_id_map.size());
+			int err_id = predicate_id_map.size();
+			predicate_id_map.emplace(c.bool_val(false).decl(), err_id);
 
 			// initialize body_predicates_vec and body_predicates_set
 			for (int i = 0; i < clauses.size(); i++) {
@@ -337,30 +376,23 @@ namespace structuralHorn {
 			return update;
 		}
 
-		bool amend_clauses(std::set<int> clause_ids, std::set<int> facts_ids, int query_id) {
+		bool amend_clauses(const std::set<int>& clause_ids, int query_id, const std::set<int>& predicates_to_substitute) {
 			// assert all clauses have valid ids
 			for (int clause_id : clause_ids) {
-				assert(0 <= clause_id && clause_id < num_of_clauses());
-			}
-			for (int clause_id : facts_ids) {
 				assert(0 <= clause_id && clause_id < num_of_clauses());
 			}
 			assert(0 <= query_id && query_id < num_of_clauses());
 
 			expr query = clauses[query_id];
 			assert(!query.body().arg(1).is_false()); // assert query_id is not already a query
+			query = substitute_body_preds(query, query_id, predicates_to_substitute);
 
 			bool update = false;
 			expr_vector chcs(c);
 
-			// substitute body predicates of all clauses in facts_ids with their interpretations
-			for (int fact_id : facts_ids) {
-				chcs.push_back(to_fact(clauses[fact_id], fact_id));
-			}
-
-			// create clauses vector from clause_ids and new facts_ids
+			// substitute predicates_to_substitute with their interpretations
 			for (int clause_id : clause_ids) {
-				chcs.push_back(clauses[clause_id]);
+				chcs.push_back(substitute_body_preds(clauses[clause_id], clause_id, predicates_to_substitute));
 			}
 
 			// create conjuncts vector from the interpretation of the head predicate of query_id
@@ -410,7 +442,7 @@ namespace structuralHorn {
 		}
 		
 		// this method assumes there is exactly one query in clause_ids
-		result solve(std::set<int> clause_ids, bool print_res = false) {
+		result solve(const std::set<int>& clause_ids, bool print_res = false) {
 			// assert all clauses have valid ids
 			for (int clause_id : clause_ids) {
 				assert(0 <= clause_id && clause_id < num_of_clauses());
@@ -430,7 +462,20 @@ namespace structuralHorn {
 				}
 			}
 
-			return solve_chcs(chcs, query);
+			result res = solve_chcs(chcs, query);
+
+			for (const auto& [predicate, id] : predicate_id_map) {
+				std::cout << "\n=====" << predicate.name() << "=====\n";
+				std::cout << "id: " << id << "\n";
+				for (const auto& [predicate1, interp] : predicate_interpretation_map) {
+					if (predicate.id() == predicate1.id()) {
+						std::cout << "interpretation: " << interp << "\n";
+					}
+				}
+			}
+			std::cout << "\n";
+
+			return res;
 		}
 
 		const func_decl_vector& get_head_predicate_vec() {

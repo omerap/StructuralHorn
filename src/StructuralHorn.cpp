@@ -22,7 +22,9 @@ std::string parseCmdLine(int argc, char** argv) {
         ("print-params", "print current parameters")
         //("alg", po::value<unsigned>(&gParams.alg)->default_value(0),"Solver: 0 - Z3, 1 - IH")
         // ("verbose,v", po::value<unsigned>(&gParams.verbosity)->default_value(0), "Verbosity level: 0 means silent")("version", "Print version string")
-        ("hyperarc-sources", po::value<unsigned>(&gParams.hyperarc_sources_distance_measure)->default_value(0),
+		("chc-solver", po::value<unsigned>(&gParams.chc_solver)->default_value(0),
+			"Underlying chc solver: 0 - spacer, 1 - eldarica")
+		("hyperarc-sources", po::value<unsigned>(&gParams.hyperarc_sources_distance_measure)->default_value(0),
 			"Data structure of hyperarc sources when measuring hyperpaths: 0 - set, 1 - multiset")
 		("hyperarc-weight", po::value<unsigned>(&gParams.hyperarc_weight_distance_measure)->default_value(0),
 			"Weight of hyperarcs when measuring hyperpaths: 0 - number of sources, 1 - 1")
@@ -80,7 +82,9 @@ std::string parseCmdLine(int argc, char** argv) {
 }
 
 void test_hypergraph() {
-	hypergraph g(0,4);
+	hypergraph g;
+	g.set_init_node(0);
+	g.set_err_node(4);
 
 	node_multiset sources1;
 	sources1.insert(0);
@@ -120,9 +124,12 @@ void test_hypergraph() {
 
 	std::cout << g;
 
-	hyperarc_set optimal_hyperpath = g.shortest_nontrivial_hyperpath_gt0();
-	while (!optimal_hyperpath.empty()) {
-		std::cout << "\nOptimal hyperpath: {";
+	hyperarc_set optimal_hyperpath;
+	int optimal_hyperpath_last = -1;
+	node_set predicates_to_substitute;
+	g.shortest_hyperpath_gt0(optimal_hyperpath, optimal_hyperpath_last, predicates_to_substitute);
+	while (optimal_hyperpath_last != -1) {
+		std::cout << "\noptimal hyperpath:\t{";
 		bool first_hyperarc = true;
 		for (int hyperarc : optimal_hyperpath) {
 			if (first_hyperarc) {
@@ -134,8 +141,24 @@ void test_hypergraph() {
 			}
 		}
 		std::cout << "}\n";
-		std::cout << g;
-		optimal_hyperpath = g.shortest_nontrivial_hyperpath_gt0();
+		std::cout << "last hyperarc:\t" << optimal_hyperpath_last << "\n";
+		std::cout << "reachable predicates:\t{";
+		bool first_predicate = true;
+		for (int pred : predicates_to_substitute) {
+			if (first_predicate) {
+				first_predicate = false;
+				std::cout << pred;
+			}
+			else {
+				std::cout << ", " << pred;
+			}
+		}
+		std::cout << "}\n";
+		//std::cout << g;
+		optimal_hyperpath.clear();
+		optimal_hyperpath_last = -1;
+		predicates_to_substitute.clear();
+		g.shortest_hyperpath_gt0(optimal_hyperpath, optimal_hyperpath_last, predicates_to_substitute);
 	}
 
 	int node = 1;
@@ -163,7 +186,9 @@ void test_hypergraph() {
 }
 
 void test_hypergraph2() {
-	hypergraph g(0, 2);
+	hypergraph g;
+	g.set_init_node(0);
+	g.set_err_node(2);
 
 	node_multiset sources0;
 	sources0.insert(0);
@@ -196,9 +221,12 @@ void test_hypergraph2() {
 
 	std::cout << g;
 
-	hyperarc_set optimal_hyperpath = g.shortest_nontrivial_hyperpath_gt0();
-	while (!optimal_hyperpath.empty()) {
-		std::cout << "\nOptimal hyperpath: {";
+	hyperarc_set optimal_hyperpath;
+	int optimal_hyperpath_last = -1;
+	node_set predicates_to_substitute;
+	g.shortest_hyperpath_gt0(optimal_hyperpath, optimal_hyperpath_last, predicates_to_substitute);
+	while (optimal_hyperpath_last != -1) {
+		std::cout << "\noptimal hyperpath:\t{";
 		bool first_hyperarc = true;
 		for (int hyperarc : optimal_hyperpath) {
 			if (first_hyperarc) {
@@ -210,8 +238,24 @@ void test_hypergraph2() {
 			}
 		}
 		std::cout << "}\n";
-		std::cout << g;
-		optimal_hyperpath = g.shortest_nontrivial_hyperpath_gt0();
+		std::cout << "last hyperarc:\t" << optimal_hyperpath_last << "\n";
+		std::cout << "reachable predicates:\t{";
+		bool first_predicate = true;
+		for (int pred : predicates_to_substitute) {
+			if (first_predicate) {
+				first_predicate = false;
+				std::cout << pred;
+			}
+			else {
+				std::cout << ", " << pred;
+			}
+		}
+		std::cout << "}\n";
+		//std::cout << g;
+		optimal_hyperpath.clear();
+		optimal_hyperpath_last = -1;
+		predicates_to_substitute.clear();
+		g.shortest_hyperpath_gt0(optimal_hyperpath, optimal_hyperpath_last, predicates_to_substitute);
 	}
 
 	int node = 1;
@@ -694,7 +738,7 @@ void test_spacer_wrapper() {
 	std::set<int> facts_ids;
 	facts_ids.insert(15);
 	int query_id = 16;
-	update = s.amend_clauses(clause_ids, facts_ids, query_id);
+	// update = s.amend_clauses(clause_ids, facts_ids, query_id);
 	std::cout << "\n" << update << "\n";
 
 	std::cout << "\n==========predicates==========\n";
@@ -709,6 +753,20 @@ void test_spacer_wrapper() {
 	}
 }
 
+void test_structural_horn() {
+	structural_horn s("C:\\Users\\omer.r\\source\\repos\\chc-comp22-benchmarks\\LIA\\chc-LIA_001.smt2");
+	result res = s.solve();
+	if (res == result::sat) {
+		std::cout << "\nthe set of chcs is not satisfiable\n";
+	}
+	else if (res == result::unsat) {
+		std::cout << "\nthe set of chcs is satisfiable\n";
+	}
+	else {
+		std::cout << "\nthe satisfiability of the set of chcs is unknown\n";
+	}
+}
+
 int main(int argc, char** argv)
 {
 	std::string fileName = parseCmdLine(argc, argv);
@@ -720,7 +778,8 @@ int main(int argc, char** argv)
 		// test_fixedpoint();
 		// test_add_cover();
 		// test_to_fact_and_to_query();
-		test_spacer_wrapper();
+		// test_spacer_wrapper();
+		test_structural_horn();
 	}
 	catch (std::exception& ex) {
 		std::cout << ex.what();
