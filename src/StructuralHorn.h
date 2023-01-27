@@ -48,6 +48,12 @@ namespace structuralHorn {
 						}
 					}
 				}
+				else { // in case spacer returns an incomplete model. This can happen if the problem is solved only by performing simplifications made by the frontend.
+					for (int rule : rules) {
+						queue.insert(rule);
+					}
+					queue.insert(sort_of_a_query);
+				}
 			}
 			while (!queue.empty()) {
 				int rule = *(queue.begin());
@@ -81,7 +87,7 @@ namespace structuralHorn {
 			for (int i = 0; i < s->num_of_clauses(); i++) {
 				g.insert_hyperarc(i, s->body_predicates(i), s->head_predicate(i));
 			}
-			std::cout << "\n" << g << "\n";
+			//std::cout << "\n" << g << "\n";
 		}
 
 		~structural_horn() {
@@ -101,7 +107,7 @@ namespace structuralHorn {
 
 			int iteration = 0;
 			while (true) {
-				std::cout << "===============iteration " << iteration << "===============\n";
+				//std::cout << "===============iteration " << iteration << "===============\n";
 				result res = s->solve(delta); // invoke the underlying chc solver
 				if (res == result::sat) { // the chc set is *not* satisfiable, there exists a ground refutation 
 					return result::sat;

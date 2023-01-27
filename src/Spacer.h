@@ -7,6 +7,7 @@
 
 #include "Solver.h"
 #include "z3++.h"
+#include "Global.h"
 
 using namespace z3;
 
@@ -20,14 +21,14 @@ namespace structuralHorn {
 		params.set("fp.xform.inline_linear", false);
 		params.set("fp.xform.inline_eager", false);
 
-		// params.set("fp.spacer.random_seed", gParams.random_seed);
+		params.set("fp.spacer.random_seed", gParams.random_seed);
 		// params.set("print_statistics", true);
 
 		// arrays
-		/*if (gParams.array_theory == 1) {
+		if (gParams.array_theory == 1) {
 			params.set("fp.spacer.ground_pobs", false);
 			params.set("fp.spacer.q3.use_qgen", true);
-		}*/
+		}
 		return params;
 	}
 	
@@ -464,6 +465,7 @@ namespace structuralHorn {
 
 			result res = solve_chcs(chcs, query);
 
+			/*
 			for (const auto& [predicate, id] : predicate_id_map) {
 				std::cout << "\n=====" << predicate.name() << "=====\n";
 				std::cout << "id: " << id << "\n";
@@ -474,6 +476,7 @@ namespace structuralHorn {
 				}
 			}
 			std::cout << "\n";
+			*/
 
 			return res;
 		}

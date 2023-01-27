@@ -3,7 +3,7 @@
 #
 
 # Add source to this project's executable.
-add_executable (StructuralHorn "StructuralHorn.cpp" "StructuralHorn.h" "Hypergraph.h" "Global.h" "Global.cpp" "Solver.h" "Spacer.h" "Eldarica.h")
+add_executable (StructuralHorn "StructuralHorn.cpp" "StructuralHorn.h" "Hypergraph.h" "Global.h" "Global.cpp" "Solver.h" "Spacer.h" "Eldarica.h" "Test.h")
 
 target_link_libraries( StructuralHorn ${Boost_LIBRARIES} ${Z3_LIBRARY})
 
