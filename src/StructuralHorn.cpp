@@ -688,7 +688,25 @@ void test_spacer_wrapper() {
 	std::cout << "\n==========amend_clause==========\n";
 	bool update = s.amend_clause(16);
 	std::cout << "\n" << update << "\n";
-	
+
+	std::cout << "\n==========amend_clauses==========\n";
+	clause_ids.clear();
+	std::set<int> facts_ids;
+	facts_ids.insert(15);
+	int query_id = 16;
+	update = s.amend_clauses(clause_ids, facts_ids, query_id);
+	std::cout << "\n" << update << "\n";
+
+	std::cout << "\n==========predicates==========\n";
+	for (const auto& [predicate, id] : predicate_id_map) {
+		std::cout << "\n=====" << predicate.name() << "=====\n";
+		std::cout << "id: " << id << "\n";
+		for (const auto& [predicate1, interp] : predicate_interpretation_map) {
+			if (predicate.id() == predicate1.id()) {
+				std::cout << "interpretation: " << interp << "\n";
+			}
+		}
+	}
 }
 
 int main(int argc, char** argv)

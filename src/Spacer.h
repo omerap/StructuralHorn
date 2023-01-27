@@ -93,7 +93,7 @@ namespace structuralHorn {
 			const expr_vector& variables = bound_variables_vec[clause_id];
 			expr fact = forall(variables, implies(new_body, clause.body().arg(1)));
 			
-			//std::cout << "\nfact:\n" << fact << "\n\n";
+			std::cout << "\nfact:\n" << fact << "\n\n";
 			return fact;
 		}
 
@@ -337,7 +337,6 @@ namespace structuralHorn {
 			return update;
 		}
 
-		// TODO: implement
 		bool amend_clauses(std::set<int> clause_ids, std::set<int> facts_ids, int query_id) {
 			// assert all clauses have valid ids
 			for (int clause_id : clause_ids) {
@@ -352,17 +351,60 @@ namespace structuralHorn {
 			assert(!query.body().arg(1).is_false()); // assert query_id is not already a query
 
 			bool update = false;
+			expr_vector chcs(c);
 
-			// TODO: substitute body predicates of all clauses in facts_ids with their interpretations
+			// substitute body predicates of all clauses in facts_ids with their interpretations
+			for (int fact_id : facts_ids) {
+				chcs.push_back(to_fact(clauses[fact_id], fact_id));
+			}
 
-			// TODO: create clauses vector from clause_ids and new facts_ids
+			// create clauses vector from clause_ids and new facts_ids
+			for (int clause_id : clause_ids) {
+				chcs.push_back(clauses[clause_id]);
+			}
 
-			// TODO: create conjuncts vector from the interpretation of the head predicate of query_id
+			// create conjuncts vector from the interpretation of the head predicate of query_id
+			auto it = predicate_interpretation_map.find(head_predicate_vec[query_id]);
+			assert(it != predicate_interpretation_map.end());
+			expr interp = it->second;
+			//expr interp = ((c.variable(0, c.int_sort()) == 1) && (c.variable(1, c.int_sort()) >= 1));
+			expr_vector conjuncts(c);
+			if (interp.is_and()) {
+				for (int i = 0; i < interp.num_args(); i++) {
+					conjuncts.push_back(interp.arg(i));
+				}
+			}
+			else {
+				conjuncts.push_back(interp);
+			}
 
-			// TODO: check incrementally which conjuncts are implied
+			// check incrementally which conjuncts are implied
 			// update the interpretations of the head predicates of (facts_ids U clause_ids) accordingly
+			expr new_interp = c.bool_val(true);
+			for (int i = 0; i < conjuncts.size(); i++) {
+				expr conjunct = conjuncts[i];
+				expr query_i = to_query(query, query_id, (new_interp && conjunct));
+				//std::cout << "\nquery "<< i <<":\n" << query_i << "\n";
+				result res = solve_chcs(chcs, query_i);
+				if (res == result::unsat) { // conjunct is implied
+					if (new_interp.is_true()) {
+						new_interp = conjunct;
+					}
+					else {
+						new_interp = (new_interp && conjunct);
+					}
+					//std::cout << "implied\n";
+				}
+				else {
+					update = true;
+					//std::cout << "not implied\n";
+				}
+			}
 
-			// TODO: update the interpretation of the head predicate of query_id if needed
+			// update the interpretation of the head predicate of query_id if needed
+			if (update) {
+				it->second = new_interp.simplify();
+			}
 
 			return update;
 		}
