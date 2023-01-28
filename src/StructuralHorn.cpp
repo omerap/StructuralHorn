@@ -148,7 +148,11 @@ result run_eldarica(std::string fileName) {
 #ifdef __unix__
     SH_MEASURE_FN;
 #endif
-    return result::unknown;
+    EldaricaSolver e(fileName);
+    int i = e.num_of_clauses();
+    set<int> all;
+    for (int x=0; x < i; x++) all.insert(x);
+    return e.solve(all, true);
 }
 
 
