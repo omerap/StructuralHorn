@@ -36,6 +36,7 @@ namespace structuralHorn {
 	private:
 		int init_node;
 		int err_node;
+		int query_id;
 		node_set reachable;
 
 		node_set nodes;
@@ -45,7 +46,7 @@ namespace structuralHorn {
 		weights_map weight; // hyperarc -> weight
 			
 	public:
-		hypergraph() : init_node(-1), err_node(-1) {}
+		hypergraph() : init_node(-1), err_node(-1), query_id(-1) {}
 
 		void set_init_node(int init_node) {
 			this->init_node = init_node;
@@ -68,6 +69,9 @@ namespace structuralHorn {
 			}
 			else {
 				this->weight[hyperarc] = 1;
+			}
+			if (target_node == err_node) {
+				query_id = hyperarc;
 			}
 		}
 
@@ -234,6 +238,10 @@ namespace structuralHorn {
 				throw invalidHyperarcId();
 			}*/
 			return this->target_node[hyperarc];
+		}
+
+		int get_query_id() {
+			return query_id;
 		}
 
 		friend std::ostream& operator<<(std::ostream& out, hypergraph& g);

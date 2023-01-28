@@ -8,6 +8,7 @@
 #include "EldaricaSolver.h"
 #include "Hypergraph.h"
 #include "Global.h"
+#include "Stats.h"
 
 namespace structuralHorn {
 
@@ -26,6 +27,9 @@ namespace structuralHorn {
 		}
 
 		bool mkRuleSat(const std::set<int>& rules, int sort_of_a_query, const std::set<int>& predicates_to_substitute) {
+#ifdef __unix__
+			SH_MEASURE_FN;
+#endif
 			bool weaken_interp = false;
 			if (g.get_target_node(sort_of_a_query) == error_id()) { // sort_of_a_query is a query
 				return false;
@@ -74,6 +78,9 @@ namespace structuralHorn {
 
 	public:
 		structural_horn(char const* file) {
+#ifdef __unix__
+			SH_MEASURE_FN;
+#endif
 			if (gParams.chc_solver == 0) {
 				s = new spacer(file);
 			}
@@ -95,6 +102,9 @@ namespace structuralHorn {
 		}
 
 		result solve() {
+#ifdef __unix__
+			SH_MEASURE_FN;
+#endif
 			// InitClauses
 			std::set<int> rules;
 			int sort_of_a_query = -1;
@@ -117,6 +127,7 @@ namespace structuralHorn {
 					if (delta.size() == s->num_of_clauses()) { // the chc set is satisfiable (there exists a satisfying interpretation) or unknown
 						return res;
 					}
+					iteration++;
 
 					// NextClauses
 					rules.clear();
@@ -128,8 +139,17 @@ namespace structuralHorn {
 					for (int rule : rules) {
 						delta.insert(rule);
 					}
+#ifdef __unix__
+						Stats::uset("Iters", iter);
+						VERBOSE(1, Stats::PrintBrunch(vout()););
+#endif
+
 				} while (!mkRuleSat(rules, sort_of_a_query, predicates_to_substitute));
-				iteration++;
+
+#ifdef __unix__
+					Stats::uset("Iters", iter);
+					VERBOSE(1, Stats::PrintBrunch(vout()););
+#endif
 			}
 		}
 	};

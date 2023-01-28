@@ -1,5 +1,4 @@
 ﻿// StructHorn.cpp : Defines the entry point for the application.
-//
 
 #include <string>
 
@@ -10,19 +9,22 @@
 #include "StructuralHorn.h"
 #include "Hypergraph.h"
 #include "Global.h"
+#include "Stats.h"
 #include "Spacer.h"
 #include "Test.h"
 
 using namespace std;
 using namespace structuralHorn;
-namespace po = boost::program_options;
 using namespace z3;
+
+namespace po = boost::program_options;
 
 std::string parseCmdLine(int argc, char** argv) {
     po::options_description generic("Options");
     generic.add_options()("help", "produce help message")
         ("print-params", "print current parameters")
-        // ("verbose,v", po::value<unsigned>(&gParams.verbosity)->default_value(0), "Verbosity level: 0 means silent")("version", "Print version string")
+        ("verbose,v", po::value<unsigned>(&gParams.verbosity)->default_value(0), "Verbosity level: 0 means silent")
+        ("version", "Print version string")
         ("chc-solver", po::value<unsigned>(&gParams.chc_solver)->default_value(0),
             "Underlying chc solver: 0 - spacer, 1 - eldarica")
         ("algorithm", po::value<unsigned>(&gParams.algorithm)->default_value(0),
@@ -89,21 +91,19 @@ std::string parseCmdLine(int argc, char** argv) {
     }
 }
 
-void run_structural_horn(std::string fileName) {
+result run_structural_horn(std::string fileName) {
+#ifdef __unix__
+    SH_MEASURE_FN;
+#endif
     structural_horn s(fileName.c_str());
     result res = s.solve();
-    if (res == result::sat) {
-        std::cout << "\nSAT\n";
-    }
-    else if (res == result::unsat) {
-        std::cout << "\nUNSAT\n";
-    }
-    else {
-        std::cout << "\nUNKNOWN\n";
-    }
+    return res;
 }
 
-void run_spacer(std::string fileName) {
+result run_spacer(std::string fileName) {
+#ifdef __unix__
+    SH_MEASURE_FN;
+#endif
     context c;
     fixedpoint fp(c);
     fp.set(init_params(c));
@@ -134,37 +134,39 @@ void run_spacer(std::string fileName) {
     }
     check_result res = fp.query(query);
     if (res == z3::sat) {
-        std::cout << "\nSAT\n";
+        return result::sat;
     }
     else if (res == z3::unsat) {
-        std::cout << "\nUNSAT\n";
+        return result::unsat;
     }
     else {
-        std::cout << "\nUNKNOWN\n";
+        return result::unknown;
     }
 }
 
-void run_eldarica(std::string fileName) {
-
+result run_eldarica(std::string fileName) {
+#ifdef __unix__
+    SH_MEASURE_FN;
+#endif
+    return result::unknown;
 }
 
 
 int main(int argc, char** argv)
 {
-	std::string fileName = parseCmdLine(argc, argv);
-    EldaricaSolver e_solver("file");
-    return 0;
-	try {
+    std::string fileName = parseCmdLine(argc, argv);
+    result res = result::unknown;
+    try {
         if (gParams.test_mode == 0) {
             if (gParams.algorithm == 0) { // StructuralHorn
-                run_structural_horn(fileName);
+                res = run_structural_horn(fileName);
             }
             else { // Underlying solver
                 if (gParams.chc_solver == 0) { // Spacer
-                    run_spacer(fileName);
+                    res = run_spacer(fileName);
                 }
                 else { // Eldarica
-                    run_eldarica(fileName);
+                    res = run_eldarica(fileName);
                 }
             }
         }
@@ -178,5 +180,29 @@ int main(int argc, char** argv)
     if (gParams.chc_solver == 0) { // Spacer
         Z3_finalize_memory();
     }
+
+    if (res == result::sat) {
+        std::cout << "\nSAT\n";
+    }
+    else if (res == result::unsat) {
+        std::cout << "\nUNSAT\n";
+    }
+    else {
+        std::cout << "\nUNKNOWN\n";
+    }
+
+#ifdef __unix__
+    if (res == result::sat) {
+        Stats::set("Result", "SAT");
+    }
+    else if (res == result::unsat) {
+        Stats::set("Result", "UNSAT");
+    }
+    else {
+        Stats::set("Result", "UNKNOWN");
+    }
+    VERBOSE(0, Stats::PrintBrunch(outs()););
+#endif
+
 	return 0;
 }
