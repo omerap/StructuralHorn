@@ -65,18 +65,18 @@ namespace structuralHorn {
 		/**
 		* Amends the interpretation so that it satisfies the given set of clauses.
 		* 
-		* The clauses in facts_ids should be considered as facts by substituting their body predicates with their interpretations (unless they are facts in the first place).
+		* Every predicate in predicates_to_substitute should be substitute with its interpretation in the bodies of clauses (including the query).
 		* The clause query_id should be considered as a query by substituting its head predicate with its interpretations (unless it is a query in the first place).
 		* 
 		* All other clauses (clauses in clause_ids) contain fresh predicates (i.e., predicates that were not solved previously and therefore have an interpretation of true).
 		* It is necessary to update the interpretations of all fresh predicates if the interpretation of query_id is indeed implied.
 		* 
 		* @param clause_ids The IDs of the clauses that should be checked.
-		* @param facts_ids The IDs of the clauses that should be considered as facts.
 		* @param query_id The ID of the clause that should be considered as a query.
+		* @param predicates_to_substitute The IDs of the presicates that should be substituted with their interpretation.
 		* @return true iff the interpretation of the head predicate of query_id had to be weakened.
 		*/
-		virtual bool amend_clauses(std::set<int> clause_ids, std::set<int> facts_ids, int query_id) = 0;
+		virtual bool amend_clauses(const std::set<int>& clause_ids, int query_id, const std::set<int>& predicates_to_substitute) = 0;
 
 		/**
 		* Solves the given clauses using the undelying CHC solver.
@@ -88,7 +88,7 @@ namespace structuralHorn {
 		* @param print_res If true, then the satisfying interpretation/ground refutation should be printed to std::cout
 		* @return the result of the CHC-SAT instance - sat, unsat or unknown
 		*/
-		virtual result solve(std::set<int> clause_ids, bool print_res = false) = 0;
+		virtual result solve(const std::set<int>& clause_ids, bool print_res = false) = 0;
 	};
 
 }

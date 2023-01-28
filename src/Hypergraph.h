@@ -3,7 +3,7 @@
 #include <iostream>
 #include <set>
 #include <unordered_map>
-#include <exception>
+//#include <exception>
 
 #include "Global.h"
 
@@ -18,7 +18,7 @@ namespace structuralHorn {
 	typedef std::unordered_map<int, bool> reachable_map;
 	typedef std::unordered_map<int, size_t> weights_map;
 
-	struct invalidNodeId : public std::exception {
+	/*struct invalidNodeId : public std::exception {
 	public:
 		const char* what() const throw () {
 			return "Invalid node id. The id should be between 0 and number of predicates + 1";
@@ -30,7 +30,7 @@ namespace structuralHorn {
 		const char* what() const throw () {
 			return "Invalid hyperarc id. The id should be between 1 and number of clauses";
 		}
-	};
+	};*/
 
 	class hypergraph {
 	private:
@@ -45,9 +45,16 @@ namespace structuralHorn {
 		weights_map weight; // hyperarc -> weight
 			
 	public:
-		hypergraph (int init_node, int err_node) : init_node(init_node), err_node(err_node) {}
+		hypergraph() : init_node(-1), err_node(-1) {}
 
-		// TODO: insert all hyperarcs in the constructor and delete this function
+		void set_init_node(int init_node) {
+			this->init_node = init_node;
+		}
+
+		void set_err_node(int err_node) {
+			this->err_node = err_node;
+		}
+
 		void insert_hyperarc (int hyperarc, node_multiset source_nodes, int target_node) {
 			for (int source_node : source_nodes) {
 				this->out_hyperarcs[source_node].insert(hyperarc);
@@ -64,8 +71,8 @@ namespace structuralHorn {
 			}
 		}
 
-		hyperarc_set shortest_nontrivial_hyperpath_gt0 () {
-			hyperarc_set optimal_hyperpath;
+		void shortest_hyperpath_gt0 (hyperarc_set& optimal_hyperpath, int& optimal_hyperpath_last, node_set& predicates_to_substitute) {
+			// hyperarc_set optimal_hyperpath;
 			
 			node_set nodes_to_scan(this->nodes);
 			std::unordered_map<int, size_t> hyperarc_unscanned_sources;
@@ -180,7 +187,8 @@ namespace structuralHorn {
 			// construct the optimal hyperpath
 			if (last_hyperarc[min_node] != INT_MAX) {
 				int curr_hyperarc = last_hyperarc[min_node];
-				optimal_hyperpath.insert(curr_hyperarc);
+				// optimal_hyperpath.insert(curr_hyperarc);
+				optimal_hyperpath_last = curr_hyperarc;
 				node_set optimal_hyperpath_nodes_to_check;
 				for (int hyperarc_source : source_nodes[curr_hyperarc]) {
 					if ((hyperarc_source != init_node) && (reachable.count(hyperarc_source) == 0)) {
@@ -191,7 +199,7 @@ namespace structuralHorn {
 				while (!optimal_hyperpath_nodes_to_check.empty()) {
 					int curr_node = *(optimal_hyperpath_nodes_to_check.cbegin());
 					optimal_hyperpath_nodes_to_check.erase(curr_node);
-					int curr_hyperarc = last_hyperarc[curr_node];
+					curr_hyperarc = last_hyperarc[curr_node];
 					optimal_hyperpath.insert(curr_hyperarc);
 					for (int hyperarc_source : source_nodes[curr_hyperarc]) {
 						if ((hyperarc_source != init_node) && (reachable.count(hyperarc_source) == 0)) {
@@ -201,29 +209,30 @@ namespace structuralHorn {
 				}
 			}
 
+			predicates_to_substitute = reachable;
+
 			// zero the weights of the optimal hyperpath hyperarcs and mark their target nodes as reachable
+
 			for (int hyperarc : optimal_hyperpath) {
 				weight[hyperarc] = 0;
-				if (this->target_node[hyperarc] != err_node) {
-					reachable.insert(target_node[hyperarc]);
-				}
+				reachable.insert(target_node[hyperarc]);
 			}
-
-			return optimal_hyperpath;
+			weight[optimal_hyperpath_last] = 0;
 		}
 
 		hyperarc_set get_out_hyperarcs(int node) {
-			// assert(0 <= init_node && node <= this->err_node);
-			if (node < this->init_node || node > this->err_node) {
+			assert(0 <= init_node && node <= this->err_node);
+			/*if (node < this->init_node || node > this->err_node) {
 				throw invalidNodeId();
-			}
+			}*/
 			return this->out_hyperarcs[node];
 		}
 
 		int get_target_node(int hyperarc) {
-			if (this->target_node.count(hyperarc) == 0) {
+			assert(target_node.count(hyperarc) != 0);
+			/*if (this->target_node.count(hyperarc) == 0) {
 				throw invalidHyperarcId();
-			}
+			}*/
 			return this->target_node[hyperarc];
 		}
 
@@ -232,7 +241,7 @@ namespace structuralHorn {
 
 	inline std::ostream& operator<<(std::ostream& out, hypergraph& g) {
 		out << "=================================================================\n";
-		out << "my hypergraph has " << g.out_hyperarcs.size() << " nodes and " << g.source_nodes.size() << " hyperarcs.\n\n";
+		out << "my hypergraph has " << g.out_hyperarcs.size() + 1 << " nodes and " << g.source_nodes.size() << " hyperarcs.\n\n";
 		out << "the outgoing hyperarcs of each node: \n";
 		for (int node : g.nodes) {
 			out << "- node " << node << ":";
