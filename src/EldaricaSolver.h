@@ -106,6 +106,7 @@ public:
         m_amend_one = loadMethod("amendCls", "(I)Z");
         m_amend = loadMethod("amendProof2", "(Ljava/util/List;Ljava/util/List;I)Z");
         m_verbose = loadMethod("setVerbosity", "(I)V");
+        //m_env->CallVoidMethod(m_EldaricaAPI, m_verbose, 2);
         cout << "EldaricaAPI successfully constructed !"<<endl;
     }
 
@@ -168,11 +169,13 @@ public:
     virtual bool amend_clauses(const std::set<int>& clause_ids, int query_id, const std::set<int>& preds_to_subst) {
         jobject clauses = m_env->NewObject(m_ArrayList, m_listCtor, clause_ids.size());
         for (int id : clause_ids) {
-            m_env->CallBooleanMethod(clauses, m_listAdd, id);
+            jobject oId = m_env->NewObject(m_Integer, m_intCtor, id);
+            m_env->CallBooleanMethod(clauses, m_listAdd, oId);
         }
         jobject preds = m_env->NewObject(m_ArrayList, m_listCtor, preds_to_subst.size());
         for (int id : preds_to_subst) {
-            m_env->CallBooleanMethod(preds, m_listAdd, id);
+            jobject oId = m_env->NewObject(m_Integer, m_intCtor, id);
+            m_env->CallBooleanMethod(preds, m_listAdd, oId);
         }
         jint query = query_id;
 
