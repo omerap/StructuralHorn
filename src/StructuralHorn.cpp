@@ -22,7 +22,8 @@ std::string parseCmdLine(int argc, char** argv) {
     po::options_description generic("Options");
     generic.add_options()("help", "produce help message")
         ("print-params", "print current parameters")
-        // ("verbose,v", po::value<unsigned>(&gParams.verbosity)->default_value(0), "Verbosity level: 0 means silent")("version", "Print version string")
+        ("verbose,v", po::value<unsigned>(&gParams.verbosity)->default_value(0), "Verbosity level: 0 means silent")
+        ("version", "Print version string")
         ("chc-solver", po::value<unsigned>(&gParams.chc_solver)->default_value(0),
             "Underlying chc solver: 0 - spacer, 1 - eldarica")
         ("algorithm", po::value<unsigned>(&gParams.algorithm)->default_value(0),

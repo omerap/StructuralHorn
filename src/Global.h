@@ -8,6 +8,9 @@ namespace structuralHorn {
     struct SHParams {
         std::string fName;
 
+        /** verbosity level */
+        unsigned verbosity;
+
         /* Underlying chc solver
             0 - spacer, 1 - eldarica*/
         unsigned chc_solver;

@@ -7,6 +7,7 @@ namespace structuralHorn {
     std::ostream& operator<<(std::ostream& out, const SHParams& p) {
         out << "STRUCTURAL HORN PARAMETERS\n"
             << "\tfName = " << p.fName << "\n"
+            << "\tverbosity = " << p.verbosity << "\n"
             << "\tchc-solver = " << (p.chc_solver == 0 ? "Spacer" : "Eldarica") << "\n"
             << "\talgorithm = " << (p.chc_solver == 0 ? "StructuralHorn" : "underlying solver") << "\n"
             << "\tarray_theory = " << (p.array_theory == 0 ? "no" : "yes") << "\n"
