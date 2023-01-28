@@ -57,5 +57,6 @@ namespace structuralHorn {
 
 #define VERBOSE(LVL, CODE)                                                     \
   do {                                                                         \
-    if (LVL <= ::structuralHorn::gParams.verbosity) { CODE; }                             \
+    if (LVL <= ::structuralHorn::gParams.verbosity) { CODE; }                  \
   } while (0)
+  

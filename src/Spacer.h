@@ -8,6 +8,7 @@
 #include "Solver.h"
 #include "z3++.h"
 #include "Global.h"
+#include "Stats.h"
 
 using namespace z3;
 

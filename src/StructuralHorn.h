@@ -140,14 +140,14 @@ namespace structuralHorn {
 						delta.insert(rule);
 					}
 #ifdef __unix__
-						Stats::uset("Iters", iter);
+						Stats::uset("Iterations", iteration);
 						VERBOSE(1, Stats::PrintBrunch(vout()););
 #endif
 
 				} while (!mkRuleSat(rules, sort_of_a_query, predicates_to_substitute));
 
 #ifdef __unix__
-					Stats::uset("Iters", iter);
+					Stats::uset("Iterations", iteration);
 					VERBOSE(1, Stats::PrintBrunch(vout()););
 #endif
 			}
