@@ -8,6 +8,7 @@
 #include "Solver.h"
 #include "z3++.h"
 #include "Global.h"
+#include "Stats.h"
 
 using namespace z3;
 
@@ -22,12 +23,21 @@ namespace structuralHorn {
 		params.set("fp.xform.inline_eager", false);
 
 		params.set("fp.spacer.random_seed", gParams.random_seed);
+
+		params.set("fp.xform.tail_simplifier_pve", false);
+		params.set("fp.validate", true);
+		params.set("fp.spacer.mbqi", false);
+		params.set("fp.spacer.use_iuc", true);
+
 		// params.set("print_statistics", true);
 
 		// arrays
 		if (gParams.array_theory == 1) {
-			params.set("fp.spacer.ground_pobs", false);
+			// quantifier generalization
 			params.set("fp.spacer.q3.use_qgen", true);
+			params.set("fp.spacer.q3.instantiate", true);
+			params.set("fp.spacer.q3", true);
+			params.set("fp.spacer.ground_pobs", false);
 		}
 		return params;
 	}
