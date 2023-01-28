@@ -36,14 +36,18 @@ class EldaricaSolver : public solver {
     jmethodID m_listSize;
     jmethodID m_listGet;
     jmethodID m_listAdd;
+    jmethodID m_verbose;
 
 
 public:
     EldaricaSolver(string fileName) : solver(fileName ) {
         string strEldaricaAPIPath = std::getenv("ELDARICA_API_JAR");
-        ifstream jarFile(strEldaricaAPIPath.c_str());
-        if (!jarFile.good()) {
+        if (!ifstream (strEldaricaAPIPath.c_str()).good()) {
             cerr << "Cannot find the eldarica_api.jar file - exiting" << endl;
+            exit(EXIT_FAILURE);
+        }
+        if (!ifstream (fileName.c_str()).good()) {
+            cerr << "Cannot find SMT2 file - exiting" << endl;
             exit(EXIT_FAILURE);
         }
         JavaVMInitArgs vm_args;              // Initialization arguments
@@ -89,7 +93,6 @@ public:
             exit(EXIT_FAILURE);
         }
         m_EldaricaAPI = m_env->NewObject(m_EldaricaClass, ctor);
-        cout << "EldaricaAPI successfully constructed !"<<endl;
         // Load the SMT file
         jmethodID read = loadMethod("readFromSmtFile", "(Ljava/lang/String;)V");
         m_env->CallVoidMethod(m_EldaricaAPI, read, m_env->NewStringUTF(fileName.c_str()));
@@ -102,6 +105,12 @@ public:
         m_solve = loadMethod("solve", "(Ljava/util/List;Z)I");
         m_amend_one = loadMethod("amendCls", "(I)Z");
         m_amend = loadMethod("amendProof", "(Ljava/util/List;Ljava/util/List;I)Z");
+        m_verbose = loadMethod("setVerbosity", "(I)V");
+        cout << "EldaricaAPI successfully constructed !"<<endl;
+    }
+
+    ~EldaricaSolver() {
+        m_jvm->DestroyJavaVM();
     }
 
     virtual int num_of_predicates() {
