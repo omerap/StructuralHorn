@@ -243,6 +243,9 @@ namespace structuralHorn {
 
 	public:
 		spacer(char const* file) : c(), clauses(c), head_predicate_vec(c){
+#ifdef __unix__
+			SH_MEASURE_FN;
+#endif
 			fixedpoint fp(c);
 			fp.set(init_params(c));
 			fp.from_file(file);
@@ -318,6 +321,9 @@ namespace structuralHorn {
 		}
 
 		bool amend_clause(int clause_id) {
+#ifdef __unix__
+			SH_MEASURE_FN;
+#endif
 			assert(0 <= clause_id && clause_id < num_of_clauses());
 
 			expr clause = clauses[clause_id];
@@ -378,6 +384,9 @@ namespace structuralHorn {
 		}
 
 		bool amend_clauses(const std::set<int>& clause_ids, int query_id, const std::set<int>& predicates_to_substitute) {
+#ifdef __unix__
+			SH_MEASURE_FN;
+#endif
 			// assert all clauses have valid ids
 			for (int clause_id : clause_ids) {
 				assert(0 <= clause_id && clause_id < num_of_clauses());
@@ -444,6 +453,9 @@ namespace structuralHorn {
 		
 		// this method assumes there is exactly one query in clause_ids
 		result solve(const std::set<int>& clause_ids, bool print_res = false) {
+#ifdef __unix__
+			SH_MEASURE_FN;
+#endif
 			// assert all clauses have valid ids
 			for (int clause_id : clause_ids) {
 				assert(0 <= clause_id && clause_id < num_of_clauses());
