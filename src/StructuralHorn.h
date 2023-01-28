@@ -5,7 +5,7 @@
 
 #include "Solver.h"
 #include "Spacer.h"
-#include "Eldarica.h"
+#include "EldaricaSolver.h"
 #include "Hypergraph.h"
 #include "Global.h"
 
@@ -78,7 +78,7 @@ namespace structuralHorn {
 				s = new spacer(file);
 			}
 			else {
-				s = new eldarica(file);
+				s = new EldaricaSolver(file);
 			}
 
 			// initialize hypergraph
