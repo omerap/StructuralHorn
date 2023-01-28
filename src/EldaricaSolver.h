@@ -102,9 +102,9 @@ public:
         m_num_preds = loadMethod("givemeNumOfPredicates", "()I");
         m_body_preds = loadMethod("givemeBodyPredIds", "(I)Ljava/util/List;");
         m_head_pred = loadMethod("givemeHeadPredId", "(I)I");
-        m_solve = loadMethod("solve", "(Ljava/util/List;Z)I");
+        m_solve = loadMethod("solve2", "(Ljava/util/List;Z)I");
         m_amend_one = loadMethod("amendCls", "(I)Z");
-        m_amend = loadMethod("amendProof", "(Ljava/util/List;Ljava/util/List;I)Z");
+        m_amend = loadMethod("amendProof2", "(Ljava/util/List;Ljava/util/List;I)Z");
         m_verbose = loadMethod("setVerbosity", "(I)V");
         cout << "EldaricaAPI successfully constructed !"<<endl;
     }
