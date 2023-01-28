@@ -143,31 +143,31 @@ public:
     }
 
     /**
-    * Amends the interpretation so that it satisfies the given set of clauses.
-    *
-    * The clauses in facts_ids should be considered as facts by substituting their body predicates with their interpretations (unless they are facts in the first place).
-    * The clause query_id should be considered as a query by substituting its head predicate with its interpretations (unless it is a query in the first place).
-    *
-    * All other clauses (clauses in clause_ids\(facts_ids U {query_id})) contain fresh predicates (i.e., predicates that were not solved previously and therefore have an interpretation of true).
-    * It is necessary to update the interpretations of all fresh predicates if the interpretation of query_id is indeed implied.
-    *
-    * @param clause_ids The IDs of the clauses that should be checked.
-    * @param facts_ids The IDs of the clauses that should be considered as facts.
-    * @param query_id The ID of the clause that should be considered as a query.
-    * @return true iff the interpretation of the head predicate of query_id had to be weakened.
-    */
-    virtual bool amend_clauses(std::set<int> clause_ids, std::set<int> facts_ids, int query_id) {
+		* Amends the interpretation so that it satisfies the given set of clauses.
+		*
+		* Every predicate in predicates_to_substitute should be substitute with its interpretation in the bodies of clauses (including the query).
+		* The clause query_id should be considered as a query by substituting its head predicate with its interpretations (unless it is a query in the first place).
+		*
+		* All other clauses (clauses in clause_ids) contain fresh predicates (i.e., predicates that were not solved previously and therefore have an interpretation of true).
+		* It is necessary to update the interpretations of all fresh predicates if the interpretation of query_id is indeed implied.
+		*
+		* @param clause_ids The IDs of the clauses that should be checked.
+		* @param query_id The ID of the clause that should be considered as a query.
+		* @param predicates_to_substitute The IDs of the presicates that should be substituted with their interpretation.
+		* @return true iff the interpretation of the head predicate of query_id had to be weakened.
+		*/
+    virtual bool amend_clauses(const std::set<int>& clause_ids, int query_id, const std::set<int>& preds_to_subst) {
         jobject clauses = m_env->NewObject(m_ArrayList, m_listCtor, clause_ids.size());
         for (int id : clause_ids) {
             m_env->CallBooleanMethod(clauses, m_listAdd, id);
         }
-        jobject facts = m_env->NewObject(m_ArrayList, m_listCtor, facts_ids.size());
-        for (int id : facts_ids) {
-            m_env->CallBooleanMethod(facts, m_listAdd, id);
+        jobject preds = m_env->NewObject(m_ArrayList, m_listCtor, preds_to_subst.size());
+        for (int id : preds_to_subst) {
+            m_env->CallBooleanMethod(preds, m_listAdd, id);
         }
         jint query = query_id;
 
-        return m_env->CallBooleanMethod(m_EldaricaAPI, m_amend, clauses, facts, query);
+        return m_env->CallBooleanMethod(m_EldaricaAPI, m_amend, clauses, query, preds);
     }
 
     /**
@@ -180,7 +180,7 @@ public:
     * @param print_res If true, then the satisfying interpretation/ground refutation should be printed to std::cout
     * @return the result of the CHC-SAT instance - sat, unsat or unknown
     */
-    virtual result solve(std::set<int> clause_ids, bool print_res = false) {
+    virtual result solve(const std::set<int>& clause_ids, bool print_res = false) {
         jobject clauses = m_env->NewObject(m_ArrayList, m_listCtor, clause_ids.size());
         cout << "Created clauses object " << clauses << endl;
         for (int id : clause_ids) {
