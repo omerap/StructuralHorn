@@ -176,7 +176,7 @@ public:
         }
         jint query = query_id;
 
-        return m_env->CallBooleanMethod(m_EldaricaAPI, m_amend, clauses, query, preds);
+        return m_env->CallBooleanMethod(m_EldaricaAPI, m_amend, clauses, preds, query);
     }
 
     /**
@@ -207,6 +207,8 @@ private:
         jmethodID id = m_env->GetMethodID(m_EldaricaClass, name.c_str(), signature.c_str());
         if(id == nullptr) {
             cerr << "ERROR: " << name << " not found !" << endl;
+            cerr.flush();
+            exit(EXIT_FAILURE);
         }
     }
 };
