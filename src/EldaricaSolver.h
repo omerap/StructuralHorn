@@ -26,6 +26,8 @@ class EldaricaSolver : public solver {
     jmethodID m_body_preds;
     jmethodID m_head_pred;
     jmethodID m_solve;
+    jmethodID m_verbose;
+    jmethodID m_num_of_conjs;
 
     jclass m_Integer;
     jmethodID m_intCtor;
@@ -36,7 +38,7 @@ class EldaricaSolver : public solver {
     jmethodID m_listSize;
     jmethodID m_listGet;
     jmethodID m_listAdd;
-    jmethodID m_verbose;
+
 
 
 public:
@@ -106,6 +108,7 @@ public:
         m_amend_one = loadMethod("amendCls", "(I)Z");
         m_amend = loadMethod("amendProof2", "(Ljava/util/List;Ljava/util/List;I)Z");
         m_verbose = loadMethod("setVerbosity", "(I)V");
+        m_num_of_conjs = loadMethod("givemeNumberOfConjs", "(I)I");
 
         cout << "EldaricaAPI successfully constructed !"<<endl;
     }
@@ -116,6 +119,10 @@ public:
 
     virtual void set_verbosity(int v) {
         m_env->CallVoidMethod(m_EldaricaAPI, m_verbose, v);
+    }
+
+    virtual int num_of_conjs(int id) {
+        m_env->CallIntMethod(m_EldaricaAPI, m_num_of_conjs, id);
     }
 
     virtual int num_of_predicates() {
@@ -203,7 +210,7 @@ public:
             jobject oId = m_env->NewObject(m_Integer, m_intCtor, id);
             m_env->CallBooleanMethod(clauses, m_listAdd, oId);
         }
-        int res = m_env->CallIntMethod(m_EldaricaAPI, m_solve, clauses, true);
+        int res = m_env->CallIntMethod(m_EldaricaAPI, m_solve, clauses, print_res);
         if (res == 0) return result::sat;
         else if (res == 1) return result::unsat;
         return result::unknown;

@@ -29,6 +29,11 @@ namespace structuralHorn {
 		*/
         virtual void set_verbosity(int) = 0;
 
+        /**
+		* @return get number of conjuncts in the interpretation for a predicate
+		*/
+        virtual int num_of_conjs(int) = 0;
+
 		/**
 		* @return the number of predicates.
 		*/

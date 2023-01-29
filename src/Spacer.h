@@ -312,6 +312,10 @@ namespace structuralHorn {
             /// TODO
         }
 
+        virtual int num_of_conjs(int) {
+
+        }
+
 		int num_of_predicates() {
 			return predicate_id_map.size() - 2;
 		}
