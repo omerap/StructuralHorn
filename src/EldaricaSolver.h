@@ -8,6 +8,8 @@
 #include <iostream>
 #include <fstream>
 
+#include "Stats.h"
+
 namespace structuralHorn {
 
 using namespace std;
@@ -204,6 +206,7 @@ public:
     * @return the result of the CHC-SAT instance - sat, unsat or unknown
     */
     virtual result solve(const std::set<int>& clause_ids, bool print_res = false) {
+        SH_MEASURE_FN;
         jobject clauses = m_env->NewObject(m_ArrayList, m_listCtor, clause_ids.size());
         cout << "Created clauses object " << clauses << endl;
         for (int id : clause_ids) {
