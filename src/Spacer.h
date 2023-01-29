@@ -308,6 +308,10 @@ namespace structuralHorn {
 			}
 		}
 
+        virtual void set_verbosity(int v) {
+            /// TODO
+        }
+
 		int num_of_predicates() {
 			return predicate_id_map.size() - 2;
 		}

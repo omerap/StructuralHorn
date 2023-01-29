@@ -24,6 +24,11 @@ namespace structuralHorn {
         */
         solver(std::string fileName) {}
 	public:
+        /**
+		* @return set verbosity level for the solver.
+		*/
+        virtual void set_verbosity(int) = 0;
+
 		/**
 		* @return the number of predicates.
 		*/

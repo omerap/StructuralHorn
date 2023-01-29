@@ -106,12 +106,16 @@ public:
         m_amend_one = loadMethod("amendCls", "(I)Z");
         m_amend = loadMethod("amendProof2", "(Ljava/util/List;Ljava/util/List;I)Z");
         m_verbose = loadMethod("setVerbosity", "(I)V");
-        //m_env->CallVoidMethod(m_EldaricaAPI, m_verbose, 2);
+
         cout << "EldaricaAPI successfully constructed !"<<endl;
     }
 
     ~EldaricaSolver() {
         m_jvm->DestroyJavaVM();
+    }
+
+    virtual void set_verbosity(int v) {
+        m_env->CallVoidMethod(m_EldaricaAPI, m_verbose, v);
     }
 
     virtual int num_of_predicates() {
