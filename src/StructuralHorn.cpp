@@ -144,15 +144,14 @@ result run_spacer(std::string fileName) {
     }
 }
 
-result run_eldarica(std::string fileName) {
+result run_eldarica(EldaricaSolver & es) {
 #ifdef __unix__
     SH_MEASURE_FN;
 #endif
-    EldaricaSolver e(fileName);
-    int i = e.num_of_clauses();
+    int i = es.num_of_clauses();
     set<int> all;
     for (int x=0; x < i; x++) all.insert(x);
-    return e.solve(all, true);
+    return es.solve(all, true);
 }
 
 
@@ -170,7 +169,8 @@ int main(int argc, char** argv)
                     res = run_spacer(fileName);
                 }
                 else { // Eldarica
-                    res = run_eldarica(fileName);
+                    EldaricaSolver es(fileName);
+                    res = run_eldarica(es);
                 }
             }
         }
