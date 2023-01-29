@@ -313,7 +313,7 @@ namespace structuralHorn {
         }
 
         virtual int num_of_conjs(int) {
-
+            return 0;
         }
 
 		int num_of_predicates() {

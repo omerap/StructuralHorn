@@ -122,7 +122,7 @@ public:
     }
 
     virtual int num_of_conjs(int id) {
-        m_env->CallIntMethod(m_EldaricaAPI, m_num_of_conjs, id);
+        return m_env->CallIntMethod(m_EldaricaAPI, m_num_of_conjs, id);
     }
 
     virtual int num_of_predicates() {
@@ -224,6 +224,7 @@ private:
             cerr.flush();
             exit(EXIT_FAILURE);
         }
+        return id;
     }
 };
 
