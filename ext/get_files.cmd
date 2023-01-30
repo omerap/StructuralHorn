@@ -9,6 +9,7 @@
 # --array-theory (0 - no, 1 - yes)
 # --global-guidance (0 - no, 1 - yes)
 # --test-mode (0 - off, 1 - on)
+# --verbose (0 - print only final result, 1 - print the interpretation in each iteration)
 
 timeout=900
 memout=8192
@@ -20,8 +21,9 @@ seed=0
 arrayTheory=0
 globalGuidance=1
 testMode=0
+verbosity=0
 
-while getopts i:o:r:t:m:c:a:y:h:w:s:d:g: flag
+while getopts i:o:r:t:m:c:a:y:h:w:s:d:g:v: flag
 do
     case "${flag}" in
         i) inputdir=${OPTARG};;
@@ -37,6 +39,7 @@ do
         s) seed=${OPTARG};;
         d) testMode=${OPTARG};;
         g) globalGuidance=${OPTARG};;
+        v) verbosity=${OPTARG};;
     esac
 done
 
@@ -69,7 +72,7 @@ ZBNUMFILES=$(($NUMFILES - 1))
 
 # submit array of jobs to SLURM
 if [ $ZBNUMFILES -ge 0 ]; then
-  sbatch --array=0-$ZBNUMFILES --output=${outputsubdir}/slurm/slurm_%A_%a run_files.cmd -i ${inputdir} -o ${outputsubdir} -r ${repodir} -t ${timeout} -m ${memout} -c ${chcsolver} -a ${alg} -y ${arrayTheory} -h ${hyperarcSources} -w ${hyperarcWeight} -s ${seed} -g ${globalGuidance} -d ${testMode}
+  sbatch --array=0-$ZBNUMFILES --output=${outputsubdir}/slurm/slurm_%A_%a run_files.cmd -i ${inputdir} -o ${outputsubdir} -r ${repodir} -t ${timeout} -m ${memout} -c ${chcsolver} -a ${alg} -y ${arrayTheory} -h ${hyperarcSources} -w ${hyperarcWeight} -s ${seed} -g ${globalGuidance} -d ${testMode} -v ${verbosity}
 else
   echo "No jobs to submit, since no input files in this directory."
 fi

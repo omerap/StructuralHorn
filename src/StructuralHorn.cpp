@@ -114,6 +114,7 @@ result run_spacer(std::string fileName) {
     expr_vector assertions = fp.assertions();
     int i = 0;
     expr query(c);
+    func_decl_set predicates;
 
     for (expr assertion : assertions) {
         expr head_expr = assertion.body().arg(1);
@@ -132,13 +133,24 @@ result run_spacer(std::string fileName) {
             symbol name = c.str_symbol(("rule" + std::to_string(i)).c_str());
             fp.add_rule(assertion, name);
             i++;
+            predicates.insert(head_decl);
         }
     }
     check_result res = fp.query(query);
     if (res == z3::sat) {
+    	if (gParams.verbosity > 0) {
+    		std::cout << "\nThe ground refutation\n" << fp.get_answer();
+    	}
         return result::sat;
     }
     else if (res == z3::unsat) {
+    	if (gParams.verbosity > 0) {
+    		std::cout << "\nThe satisfying interpretation (after solve)\n";
+    		for (func_decl predicate : predicates) {
+			expr interp = fp.get_cover_delta(-1, predicate);
+			std::cout << "\n" << predicate.name() << ":\n" << interp << "\n";
+		}
+    	}
         return result::unsat;
     }
     else {
@@ -154,7 +166,10 @@ result run_eldarica(string fileName) {
     int i = es.num_of_clauses();
     set<int> all;
     for (int x=0; x < i; x++) all.insert(x);
-    return es.solve(all, true);
+    if (gParams.verbosity > 0) {
+    	return es.solve(all, true);
+    }
+    return es.solve(all, false);
 }
 
 

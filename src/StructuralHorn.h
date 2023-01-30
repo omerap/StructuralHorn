@@ -116,19 +116,49 @@ namespace structuralHorn {
 			}
 
 			int iteration = 0;
+			if (gParams.verbosity > 0) {
+				std::cout << "===============iteration 0===============\n";
+				std::cout << "\ndelta:\n{";
+				bool first_chc = true;
+				for (int chc : delta) {
+					if (first_chc) {
+						first_chc = false;
+						std::cout << chc;
+					}
+					else {
+						std::cout << ", " << chc;
+					}
+				}
+				std::cout << "}\n";
+			}
+#ifdef __unix__
+			Stats::uset("Iterations", 1);
+#endif
 			while (true) {
-				//std::cout << "===============iteration " << iteration << "===============\n";
-				result res = s->solve(delta); // invoke the underlying chc solver
+				// invoke the underlying chc solver
+				result res = result::unknown;
+				if (gParams.verbosity > 0) {
+					res = s->solve(delta,true);
+				}
+				else {
+					res = s->solve(delta,false);
+				}
 				if (res == result::sat) { // the chc set is *not* satisfiable, there exists a ground refutation 
-					return result::sat;
+#ifdef __unix__
+					Stats::uset("Iterations", iteration+1);
+#endif
+					return result::sat;				
 				}
 				
 				do {
 					if (delta.size() == s->num_of_clauses()) { // the chc set is satisfiable (there exists a satisfying interpretation) or unknown
+#ifdef __unix__
+						Stats::uset("Iterations", iteration+1);
+#endif
 						return res;
 					}
 					iteration++;
-
+					
 					// NextClauses
 					rules.clear();
 					sort_of_a_query = -1;
@@ -139,17 +169,25 @@ namespace structuralHorn {
 					for (int rule : rules) {
 						delta.insert(rule);
 					}
-#ifdef __unix__
-						Stats::uset("Iterations", iteration);
-						VERBOSE(1, Stats::PrintBrunch(vout()););
-#endif
+					
+					if (gParams.verbosity > 0) {
+						std::cout << "\n===============iteration " << iteration << "===============\n";
+						std::cout << "\ndelta:\n{";
+						bool first_chc = true;
+						for (int chc : delta) {
+							if (first_chc) {
+								first_chc = false;
+								std::cout << chc;
+							}
+							else {
+								std::cout << ", " << chc;
+							}
+						}
+						std::cout << "}\n";
+					}
 
 				} while (!mkRuleSat(rules, sort_of_a_query, predicates_to_substitute));
 
-#ifdef __unix__
-					Stats::uset("Iterations", iteration);
-					VERBOSE(1, Stats::PrintBrunch(vout()););
-#endif
 			}
 		}
 	};

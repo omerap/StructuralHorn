@@ -197,7 +197,7 @@ namespace structuralHorn {
 			return query;
 		}
 
-		result solve_chcs(expr_vector& chcs, expr& query) {
+		result solve_chcs(expr_vector& chcs, expr& query, bool print_res = false) {
 			// initialize solver
 			fixedpoint fp(c);
 			fp.set(init_params(c));
@@ -224,6 +224,16 @@ namespace structuralHorn {
 				expr interp = it->second;
 				fp.add_cover(-1, predicate, interp);
 			}
+			
+			if (print_res==true) {
+				std::cout << "\nThe current interpretation (before solve)\n";
+				for (func_decl predicate : predicates) {
+					auto it = predicate_interpretation_map.find(predicate);
+					assert(it != predicate_interpretation_map.end());
+					expr interp = it->second;
+					std::cout << "\n" << predicate.name() << ":\n" << interp << "\n";
+				}
+			}
 
 			// solve
 			assert(query.is_exists());
@@ -241,13 +251,29 @@ namespace structuralHorn {
 
 			// TODO: if (print_res==true) then print the result and the interpretations/ground refutation to std::cout
 			if (spacer_res == z3::sat) {
+				if (print_res==true) {
+					std::cout << "\nThe ground refutation\n" << fp.get_answer();
+				}
 				return result::sat;
 			}
 			else if (spacer_res == z3::unsat) {
-
+				if (print_res==true) {
+					std::cout << "\nThe satisfying interpretation (after solve)\n";
+					for (func_decl predicate : predicates) {
+						auto it = predicate_interpretation_map.find(predicate);
+						assert(it != predicate_interpretation_map.end());
+						expr interp = it->second;
+						std::cout << "\n" << predicate.name() << ":\n" << interp << "\n";
+					}
+					std::cout << "\n";
+				}
 				return result::unsat;
 			}
-
+			
+			if (print_res==true) {
+				std::cout << "\nThe solution is unknown\n";
+			}
+			
 			// if unknown then reset the interpretation
 			for (func_decl predicate : predicates) {
 				auto it = predicate_interpretation_map.find(predicate);
@@ -498,22 +524,9 @@ namespace structuralHorn {
 					chcs.push_back(clause);
 				}
 			}
-
-			result res = solve_chcs(chcs, query);
-
-			/*
-			for (const auto& [predicate, id] : predicate_id_map) {
-				std::cout << "\n=====" << predicate.name() << "=====\n";
-				std::cout << "id: " << id << "\n";
-				for (const auto& [predicate1, interp] : predicate_interpretation_map) {
-					if (predicate.id() == predicate1.id()) {
-						std::cout << "interpretation: " << interp << "\n";
-					}
-				}
-			}
-			std::cout << "\n";
-			*/
-
+			
+			result res = solve_chcs(chcs, query, print_res);
+			
 			return res;
 		}
 

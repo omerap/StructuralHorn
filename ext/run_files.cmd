@@ -11,8 +11,9 @@
 # --array-theory (0 - no, 1 - yes)
 # --global-guidance (0 - no, 1 - yes)
 # --test-mode (0 - off, 1 - on)
+# --verbose (0 - print only final result, 1 - print the interpretation in each iteration)
 
-while getopts i:o:r:t:m:c:a:y:h:w:s:d:g: flag
+while getopts i:o:r:t:m:c:a:y:h:w:s:d:g:v: flag
 do
     case "${flag}" in
         i) inputdir=${OPTARG};;
@@ -28,6 +29,7 @@ do
         s) seed=${OPTARG};;
         d) testMode=${OPTARG};;
         g) globalGuidance=${OPTARG};;
+        v) verbosity=${OPTARG};;
     esac
 done
 
@@ -47,4 +49,4 @@ FILENAME=${FILES[$SLURM_ARRAY_TASK_ID]}
 echo "My input file is ${FILENAME}"
 
 # make new directory, change into it, and run
-python3 ${repodir}/ext/brunch.py --out ${outputdir} --cpu ${timeout} --mem ${memout} --format base:Cpu:Result:Status ${inputdir}/${FILENAME} -- ${repodir}/build/src/StructuralHorn --chc-solver=${chcsolver} --algorithm=${alg} --hyperarc-sources=${hyperarcSources} --hyperarc-weight=${hyperarcWeight} --random-seed=${seed} --array-theory=${arrayTheory} --global-guidance=${globalGuidance} --test-mode=${testMode} -v 0 {f}
+python3 ${repodir}/ext/brunch.py --out ${outputdir} --cpu ${timeout} --mem ${memout} --format base:Cpu:Result:Status ${inputdir}/${FILENAME} -- ${repodir}/build/src/StructuralHorn --chc-solver=${chcsolver} --algorithm=${alg} --hyperarc-sources=${hyperarcSources} --hyperarc-weight=${hyperarcWeight} --random-seed=${seed} --array-theory=${arrayTheory} --global-guidance=${globalGuidance} --test-mode=${testMode} --verbose=${verbosity} {f}
