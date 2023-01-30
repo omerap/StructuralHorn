@@ -1,4 +1,4 @@
-#ifdef __unix__
+#ifndef _WIN32
 
 #include "Stats.h"
 #include "boost/format.hpp"

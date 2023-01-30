@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <set>
+#include <vector>
 
 #include "Solver.h"
 #include "Spacer.h"
@@ -27,7 +28,7 @@ namespace structuralHorn {
 		}
 
 		bool mkRuleSat(const std::set<int>& rules, int sort_of_a_query, const std::set<int>& predicates_to_substitute) {
-#ifdef __unix__
+#ifndef _WIN32
 			SH_MEASURE_FN;
 #endif
 			bool weaken_query_interp = false;
@@ -85,7 +86,7 @@ namespace structuralHorn {
 
 	public:
 		structural_horn(char const* file) {
-#ifdef __unix__
+#ifndef _WIN32
 			SH_MEASURE_FN;
 #endif
 			if (gParams.chc_solver == 0) {
@@ -109,7 +110,7 @@ namespace structuralHorn {
 		}
 
 		result solve() {
-#ifdef __unix__
+#ifndef _WIN32
 			SH_MEASURE_FN;
 #endif
 			// InitClauses
@@ -123,6 +124,7 @@ namespace structuralHorn {
 			}
 
 			int iteration = 0;
+			bool weaken_query_interp = false;
 			if (gParams.verbosity > 0) {
 				std::cout << "===============iteration 0===============\n";
 				std::cout << "\ndelta:\n{";
@@ -138,7 +140,7 @@ namespace structuralHorn {
 				}
 				std::cout << "}\n";
 			}
-#ifdef __unix__
+#ifndef _WIN32
 			Stats::uset("Iterations", 1);
 #endif
 			while (true) {
@@ -151,7 +153,7 @@ namespace structuralHorn {
 					res = s->solve(delta,false);
 				}
 				if (res == result::sat) { // the chc set is *not* satisfiable, there exists a ground refutation 
-#ifdef __unix__
+#ifndef _WIN32
 					Stats::uset("Iterations", iteration+1);
 #endif
 					return result::sat;				
@@ -159,7 +161,7 @@ namespace structuralHorn {
 				
 				do {
 					if (delta.size() == s->num_of_clauses()) { // the chc set is satisfiable (there exists a satisfying interpretation) or unknown
-#ifdef __unix__
+#ifndef _WIN32
 						Stats::uset("Iterations", iteration+1);
 #endif
 						return res;
@@ -192,9 +194,40 @@ namespace structuralHorn {
 						}
 						std::cout << "}\n";
 					}
+					
+					std::vector<double> preserved_conjs;
+					if (gParams.verbosity > 0) {
+						const node_set& reachable = g.get_reachable();
+						for (auto pred_id : reachable) {
+							preserved_conjs.push_back(s->num_of_conjs(pred_id));
+						}
+					}
+										
+					weaken_query_interp = mkRuleSat(rules, sort_of_a_query, predicates_to_substitute);
+					
+					if (gParams.verbosity > 0) {
+						const node_set& reachable2 = g.get_reachable();
+						int idx = 0;
+						for (auto pred_id : reachable2) {
+							if (preserved_conjs[idx] > 0) {
+								preserved_conjs[idx] = (s->num_of_conjs(pred_id)/preserved_conjs[idx]);
+							}
+							else {
+								preserved_conjs[idx] = 1;
+							}
+							idx++;
+						}
+						double sum = 0;
+						for (int i = 0 ; i < preserved_conjs.size() ; i++) {
+							sum += preserved_conjs[i];
+						}
+						sum /= preserved_conjs.size();
+#ifndef _WIN32
+						Stats::avg("Predicate_preservation_percentage",sum);
+#endif
+					}
 
-				} while (!mkRuleSat(rules, sort_of_a_query, predicates_to_substitute));
-
+				} while (!weaken_query_interp);
 			}
 		}
 	};

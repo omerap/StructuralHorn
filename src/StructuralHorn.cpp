@@ -94,7 +94,7 @@ std::string parseCmdLine(int argc, char** argv) {
 }
 
 result run_structural_horn(std::string fileName) {
-#ifdef __unix__
+#ifndef _WIN32
     SH_MEASURE_FN;
 #endif
     structural_horn s(fileName.c_str());
@@ -103,7 +103,7 @@ result run_structural_horn(std::string fileName) {
 }
 
 result run_spacer(std::string fileName) {
-#ifdef __unix__
+#ifndef _WIN32
     SH_MEASURE_FN;
 #endif
     context c;

@@ -240,6 +240,10 @@ namespace structuralHorn {
 			node_multiset sources = source_nodes[query_id];
 			return (sources.count(head) > 0);
 		}
+		
+		const node_set& get_reachable() {
+			return this->reachable;
+		}
 
 		friend std::ostream& operator<<(std::ostream& out, hypergraph& g);
 	};

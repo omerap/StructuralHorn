@@ -67,6 +67,7 @@ namespace structuralHorn {
 		std::vector<func_decl_vector> body_predicates_set; // clause id -> body predicates set
 		std::vector<expr_vector> bound_variables_vec; // clause id -> bound variables
 		std::map<func_decl, int, compare_func_decl> predicate_id_map; // predicate -> id
+		std::map<int, func_decl> id_predicate_map; // id -> predicate
 		std::map<func_decl, expr, compare_func_decl> predicate_interpretation_map; // predicate -> interpretation
 
 		void get_body_predicates(const expr& e, func_decl_vector& body_preds) {
@@ -232,6 +233,11 @@ namespace structuralHorn {
 					assert(it != predicate_interpretation_map.end());
 					expr interp = it->second;
 					std::cout << "\n" << predicate.name() << ":\n" << interp << "\n";
+					
+					auto it2 = predicate_id_map.find(predicate);
+					assert(it2 != predicate_id_map.end());
+					int pred_id = it2->second;
+					std::cout << "\nnumber of conjuncs: " << num_of_conjs(pred_id) << "\n";
 				}
 			}
 
@@ -264,6 +270,10 @@ namespace structuralHorn {
 						assert(it != predicate_interpretation_map.end());
 						expr interp = it->second;
 						std::cout << "\n" << predicate.name() << ":\n" << interp << "\n";
+						auto it2 = predicate_id_map.find(predicate);
+						assert(it2 != predicate_id_map.end());
+						int pred_id = it2->second;
+						std::cout << "\nnumber of conjuncs: " << num_of_conjs(pred_id) << "\n";
 					}
 					std::cout << "\n";
 				}
@@ -285,16 +295,16 @@ namespace structuralHorn {
 
 	public:
 		spacer(char const* file) : solver(file), c(), clauses(c), head_predicate_vec(c){
-		#ifdef __unix__
+#ifndef _WIN32
 			SH_MEASURE_FN;
-		#endif
+#endif
 			fixedpoint fp(c);
 			fp.set(init_params(c));
 			fp.from_file(file);
 			clauses = fp.assertions();
 			
 			for (int i = 0; i < clauses.size(); i++) {
-				// initialize head_predicate_vec, predicate_id_map and predicate_interpretation_map
+				// initialize head_predicate_vec, predicate_id_map, id_predicate_map and predicate_interpretation_map
 				assert(clauses[i].body().is_implies());
 				expr head_expr = clauses[i].body().arg(1);
 				func_decl head_decl = head_expr.decl();
@@ -302,6 +312,7 @@ namespace structuralHorn {
 				if (!head_expr.is_false() && predicate_id_map.count(head_decl) == 0) {
 					int size = predicate_id_map.size();
 					predicate_id_map.emplace(head_decl, size + 1);
+					id_predicate_map.emplace(size + 1, head_decl);
 					predicate_interpretation_map.emplace(head_decl, c.bool_val(true));
 				}
 
@@ -315,8 +326,10 @@ namespace structuralHorn {
 				bound_variables_vec.push_back(variables);
 			}
 			predicate_id_map.emplace(c.bool_val(true).decl(), 0);
+			id_predicate_map.emplace(0, c.bool_val(true).decl());
 			int err_id = predicate_id_map.size();
 			predicate_id_map.emplace(c.bool_val(false).decl(), err_id);
+			id_predicate_map.emplace(err_id, c.bool_val(false).decl());
 
 			// initialize body_predicates_vec and body_predicates_set
 			for (int i = 0; i < clauses.size(); i++) {
@@ -340,13 +353,33 @@ namespace structuralHorn {
 			}
 		}
 
-        virtual void set_verbosity(int v) {
-            /// TODO
-        }
+        	virtual void set_verbosity(int v) {
+            		/// TODO
+        	}
 
-        virtual int num_of_conjs(int) {
-            return 0;
-        }
+        	int num_of_conjs(int pred_id) {
+        		assert(1 <= pred_id && pred_id <= predicate_id_map.size() - 2);
+        		auto it1 = id_predicate_map.find(pred_id);
+        		assert(it1 != id_predicate_map.end());
+        		func_decl predicate = it1->second;
+        		auto it2 = predicate_interpretation_map.find(predicate);
+			assert(it2 != predicate_interpretation_map.end());
+			expr interp = it2->second;
+			int conjs_counter = 0;
+			if (interp.is_and()) {
+				for (int i = 0; i < interp.num_args(); i++) {
+					if (!interp.arg(i).is_true()) {
+						conjs_counter++;
+					}
+				}
+			}
+			else {
+				if (!interp.is_true()) {
+					conjs_counter++;
+				}
+			}
+            		return conjs_counter;
+        	}
 
 		int num_of_predicates() {
 			return predicate_id_map.size() - 2;
@@ -371,7 +404,7 @@ namespace structuralHorn {
 		}
 
 		bool amend_clause(int clause_id) {
-#ifdef __unix__
+#ifndef _WIN32
 			SH_MEASURE_FN;
 #endif
 			assert(0 <= clause_id && clause_id < num_of_clauses());
@@ -434,7 +467,7 @@ namespace structuralHorn {
 		}
 
 		bool amend_clauses(const std::set<int>& clause_ids, int query_id, const std::set<int>& predicates_to_substitute) {
-#ifdef __unix__
+#ifndef _WIN32
 			SH_MEASURE_FN;
 #endif
 			// assert all clauses have valid ids
@@ -503,7 +536,7 @@ namespace structuralHorn {
 		
 		// this method assumes there is exactly one query in clause_ids
 		result solve(const std::set<int>& clause_ids, bool print_res = false) {
-#ifdef __unix__
+#ifndef _WIN32
 			SH_MEASURE_FN;
 #endif
 			// assert all clauses have valid ids

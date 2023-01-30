@@ -1,5 +1,5 @@
 #pragma once
-#ifdef __unix__
+#ifndef _WIN32
 
 #include <map>
 

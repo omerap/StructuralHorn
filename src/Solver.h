@@ -6,7 +6,7 @@ namespace structuralHorn {
 	enum class result {sat, unsat, unknown};
 
 	class solver {
-    protected:
+    	protected:
         /**
         * The constructor of the class.
         *
@@ -22,17 +22,17 @@ namespace structuralHorn {
         *
         * @param file The SMT input file.
         */
-        solver(std::string fileName) {}
+        	solver(std::string fileName) {}
 	public:
-        /**
+        	/**
 		* @return set verbosity level for the solver.
 		*/
-        virtual void set_verbosity(int) = 0;
+       	 virtual void set_verbosity(int) = 0;
 
-        /**
+        	/**
 		* @return get number of conjuncts in the interpretation for a predicate
 		*/
-        virtual int num_of_conjs(int) = 0;
+       	 virtual int num_of_conjs(int) = 0;
 
 		/**
 		* @return the number of predicates.
