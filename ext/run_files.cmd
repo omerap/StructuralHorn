@@ -45,4 +45,4 @@ FILENAME=${FILES[$SLURM_ARRAY_TASK_ID]}
 echo "My input file is ${FILENAME}"
 
 # make new directory, change into it, and run
-python3 ${repodir}/ext/brunch.py --out ${outputdir} --cpu ${timeout} --mem ${memout} --format base:Cpu:Result:Status ${inputdir}/${FILENAME} -- ${repodir}/build/src/StructuralHorn --chc-solver=${chcsolver} --algorithm=${alg} --array-theory=${arrayTheory} --hyperarc-sources=${hyperarcSources} --hyperarc-weight=${hyperarcWeight} --random-seed=${seed} --test-mode=${testMode} -v 0 {f}
+python3 ${repodir}/ext/brunch.py --out ${outputdir} --cpu ${timeout} --mem ${memout} --format base:Cpu:Result:Status ${inputdir}/${FILENAME} -- ${repodir}/rel/src/StructuralHorn --chc-solver=${chcsolver} --algorithm=${alg} --array-theory=${arrayTheory} --hyperarc-sources=${hyperarcSources} --hyperarc-weight=${hyperarcWeight} --random-seed=${seed} --test-mode=${testMode} -v 0 {f}
