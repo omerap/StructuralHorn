@@ -226,22 +226,19 @@ namespace structuralHorn {
 
 		hyperarc_set get_out_hyperarcs(int node) {
 			assert(0 <= init_node && node <= this->err_node);
-			/*if (node < this->init_node || node > this->err_node) {
-				throw invalidNodeId();
-			}*/
 			return this->out_hyperarcs[node];
 		}
 
 		int get_target_node(int hyperarc) {
 			assert(target_node.count(hyperarc) != 0);
-			/*if (this->target_node.count(hyperarc) == 0) {
-				throw invalidHyperarcId();
-			}*/
 			return this->target_node[hyperarc];
 		}
-
-		int get_query_id() {
-			return query_id;
+		
+		bool affects_the_query(int hyperarc) {
+			assert(target_node.count(hyperarc) != 0);
+			int head = target_node[hyperarc];
+			node_multiset sources = source_nodes[query_id];
+			return (sources.count(head) > 0);
 		}
 
 		friend std::ostream& operator<<(std::ostream& out, hypergraph& g);

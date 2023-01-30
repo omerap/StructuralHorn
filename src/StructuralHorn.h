@@ -30,7 +30,7 @@ namespace structuralHorn {
 #ifdef __unix__
 			SH_MEASURE_FN;
 #endif
-			bool weaken_interp = false;
+			bool weaken_query_interp = false;
 			if (g.get_target_node(sort_of_a_query) == error_id()) { // sort_of_a_query is a query
 				return false;
 			}
@@ -44,7 +44,9 @@ namespace structuralHorn {
 			else { // |small_delta| > 1
 				update = s->amend_clauses(rules, sort_of_a_query, predicates_to_substitute);
 				if (update) {
-					weaken_interp = true;
+					if (g.affects_the_query(sort_of_a_query)) {
+						weaken_query_interp = true;
+					}
 					for (int out_rule : g.get_out_hyperarcs(g.get_target_node(sort_of_a_query))) {
 						if ((delta.count(out_rule) > 0) && (g.get_target_node(out_rule) != error_id())) {
 							// TODO: is it important to also require that the interpretation of g.get_target_node(out_rule) is not "true"?
@@ -64,7 +66,9 @@ namespace structuralHorn {
 				queue.erase(queue.begin());
 				update = s->amend_clause(rule);
 				if (update) {
-					weaken_interp = true;
+					if (g.affects_the_query(rule)) {
+						weaken_query_interp = true;
+					}
 					for (int out_rule : g.get_out_hyperarcs(g.get_target_node(rule))) {
 						if ((delta.count(out_rule) > 0) && (g.get_target_node(out_rule) != error_id())) {
 							// TODO: is it important to also require that the interpretation of g.get_target_node(out_rule) is not "true"?
@@ -73,7 +77,10 @@ namespace structuralHorn {
 					}
 				}
 			}
-			return weaken_interp;
+			if (!weaken_query_interp && (gParams.verbosity > 0)) {
+				std::cout << "\nThe interpretation is satisfying after amend. No need to invoke the solver\n";
+			}
+			return weaken_query_interp;
 		}
 
 	public:
