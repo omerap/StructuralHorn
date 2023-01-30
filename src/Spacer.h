@@ -30,6 +30,12 @@ namespace structuralHorn {
 		params.set("fp.spacer.use_iuc", true);
 
 		// params.set("print_statistics", true);
+		
+		// global guidance
+		if (gParams.global_guidance == 1) {
+			params.set("fp.spacer.global", true);
+			params.set("fp.spacer.expand_bnd", true);
+		}
 
 		// arrays
 		if (gParams.array_theory == 1) {

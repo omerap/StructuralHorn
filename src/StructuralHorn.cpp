@@ -29,14 +29,16 @@ std::string parseCmdLine(int argc, char** argv) {
             "Underlying chc solver: 0 - spacer, 1 - eldarica")
         ("algorithm", po::value<unsigned>(&gParams.algorithm)->default_value(0),
 			"0 - structural horn, 1 - underlying solver")
-        ("array-theory", po::value<unsigned>(&gParams.array_theory)->default_value(0),
-            "0 - no, 1 - yes")
 		("hyperarc-sources", po::value<unsigned>(&gParams.hyperarc_sources_distance_measure)->default_value(0),
 			"Data structure of hyperarc sources when measuring hyperpaths: 0 - set, 1 - multiset")
 		("hyperarc-weight", po::value<unsigned>(&gParams.hyperarc_weight_distance_measure)->default_value(0),
 			"Weight of hyperarcs when measuring hyperpaths: 0 - number of sources, 1 - 1")
         ("random-seed", po::value<unsigned>(&gParams.random_seed)->default_value(0),
             "Random seed to be used by the SMT solver")
+        ("array-theory", po::value<unsigned>(&gParams.array_theory)->default_value(0),
+            "0 - no, 1 - yes")
+        ("global-guidance", po::value<unsigned>(&gParams.global_guidance)->default_value(1),
+            "0 - no, 1 - yes")
         ("test-mode", po::value<unsigned>(&gParams.test_mode)->default_value(0),
             "Test mode: 0 - off, 1 - on")
 		;
