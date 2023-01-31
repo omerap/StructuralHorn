@@ -9,6 +9,7 @@
 #include <fstream>
 
 #include "Stats.h"
+#include "Global.h"
 
 namespace structuralHorn {
 
@@ -92,11 +93,11 @@ public:
             exit(EXIT_FAILURE);
         }
 
-        jmethodID ctor = loadMethod("<init>", "()V");
+        jmethodID ctor = loadMethod("<init>", "(Z)V");
         if(ctor == nullptr) {
             exit(EXIT_FAILURE);
         }
-        m_EldaricaAPI = m_env->NewObject(m_EldaricaClass, ctor);
+        m_EldaricaAPI = m_env->NewObject(m_EldaricaClass, ctor, (gParams.array_theory == 1));
         // Load the SMT file
         jmethodID read = loadMethod("readFromSmtFile", "(Ljava/lang/String;)V");
         m_env->CallVoidMethod(m_EldaricaAPI, read, m_env->NewStringUTF(fileName.c_str()));
