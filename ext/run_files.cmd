@@ -1,5 +1,4 @@
 #!/bin/bash
-#SBATCH --ntasks-per-node=1 --cpus-per-task=1
 #SBATCH --job-name array_run
 
 # StructuralHorn options:
@@ -49,4 +48,16 @@ FILENAME=${FILES[$SLURM_ARRAY_TASK_ID]}
 echo "My input file is ${FILENAME}"
 
 # make new directory, change into it, and run
-python3 ${repodir}/ext/brunch.py --out ${outputdir} --cpu ${timeout} --mem ${memout} --format base:Cpu:Result:Status ${inputdir}/${FILENAME} -- ${repodir}/build/src/StructuralHorn --chc-solver=${chcsolver} --algorithm=${alg} --hyperarc-sources=${hyperarcSources} --hyperarc-weight=${hyperarcWeight} --random-seed=${seed} --array-theory=${arrayTheory} --global-guidance=${globalGuidance} --test-mode=${testMode} --verbose=${verbosity} {f}
+# python3 ${repodir}/ext/brunch.py --out ${outputdir} --cpu ${timeout} --mem ${memout} --format base:Cpu:Result:Status:main ${inputdir}/${FILENAME} -- ${repodir}/build/src/StructuralHorn --chc-solver=${chcsolver} --algorithm=${alg} --hyperarc-sources=${hyperarcSources} --hyperarc-weight=${hyperarcWeight} --random-seed=${seed} --array-theory=${arrayTheory} --global-guidance=${globalGuidance} --test-mode=${testMode} --verbose=${verbosity} {f}
+
+case ${alg} in
+    0)
+        python3 ${repodir}/ext/brunch.py --out ${outputdir} --cpu ${timeout} --mem ${memout} --format base:Cpu:Result:Status:run_structural_horn ${inputdir}/${FILENAME} -- ${repodir}/rel/src/StructuralHorn --chc-solver=${chcsolver} --algorithm=${alg} --hyperarc-sources=${hyperarcSources} --hyperarc-weight=${hyperarcWeight} --random-seed=${seed} --array-theory=${arrayTheory} --global-guidance=${globalGuidance} --test-mode=${testMode} --verbose=${verbosity} {f}
+        ;;
+    1)
+        case ${chcsolver} in
+            0) python3 ${repodir}/ext/brunch.py --out ${outputdir} --cpu ${timeout} --mem ${memout} --format base:Cpu:Result:Status:run_spacer ${inputdir}/${FILENAME} -- ${repodir}/rel/src/StructuralHorn --chc-solver=${chcsolver} --algorithm=${alg} --hyperarc-sources=${hyperarcSources} --hyperarc-weight=${hyperarcWeight} --random-seed=${seed} --array-theory=${arrayTheory} --global-guidance=${globalGuidance} --test-mode=${testMode} --verbose=${verbosity} {f};;
+            1) python3 ${repodir}/ext/brunch.py --out ${outputdir} --cpu ${timeout} --mem ${memout} --format base:Cpu:Result:Status:run_eldarica ${inputdir}/${FILENAME} -- ${repodir}/rel/src/StructuralHorn --chc-solver=${chcsolver} --algorithm=${alg} --hyperarc-sources=${hyperarcSources} --hyperarc-weight=${hyperarcWeight} --random-seed=${seed} --array-theory=${arrayTheory} --global-guidance=${globalGuidance} --test-mode=${testMode} --verbose=${verbosity} {f};;
+        esac
+        ;;
+esac

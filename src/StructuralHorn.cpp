@@ -159,7 +159,7 @@ result run_spacer(std::string fileName) {
 }
 
 result run_eldarica(string fileName) {
-#ifdef __unix__
+#ifndef _WIN32
     SH_MEASURE_FN;
 #endif
     EldaricaSolver es(fileName);
@@ -173,9 +173,7 @@ result run_eldarica(string fileName) {
 }
 
 
-int main(int argc, char** argv)
-{
-
+int main(int argc, char** argv) {
     std::string fileName = parseCmdLine(argc, argv);
     result res = result::unknown;
     try {
@@ -213,7 +211,7 @@ int main(int argc, char** argv)
         std::cout << "\nUNKNOWN\n";
     }
 
-#ifdef __unix__
+#ifndef _WIN32
     if (res == result::sat) {
         Stats::set("Result", "SAT");
     }

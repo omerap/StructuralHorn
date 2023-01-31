@@ -49,17 +49,28 @@ namespace structuralHorn {
 						weaken_query_interp = true;
 					}
 					for (int out_rule : g.get_out_hyperarcs(g.get_target_node(sort_of_a_query))) {
-						if ((delta.count(out_rule) > 0) && (g.get_target_node(out_rule) != error_id())) {
-							// TODO: is it important to also require that the interpretation of g.get_target_node(out_rule) is not "true"?
-							queue.insert(out_rule);
+						int head_pred_id = g.get_target_node(out_rule);
+						if ((delta.count(out_rule) > 0) && (head_pred_id != error_id())) {
+							if (s->num_of_conjs(head_pred_id) != 0) {
+								queue.insert(out_rule);
+							}
 						}
 					}
 				}
-				else { // in case spacer returns an incomplete model. This can happen if the problem is solved only by performing simplifications made by the frontend.
-					for (int rule : rules) {
-						queue.insert(rule);
+				
+				// in case spacer returns an incomplete model. This can happen if the problem is solved only by performing simplifications made by the frontend.
+				const node_set& reachable = g.get_reachable();
+				for (int body_pred_id : reachable) {
+					if (s->num_of_conjs(body_pred_id) == 0) { // the interpretation is true
+						for (int out_rule : g.get_out_hyperarcs(body_pred_id)) {
+							int head_pred_id = g.get_target_node(out_rule);
+							if ((delta.count(out_rule) > 0) && (head_pred_id != error_id())) { // the rule is in delta and not the query
+								if (s->num_of_conjs(head_pred_id) != 0) { // the interpretation is not true
+									queue.insert(out_rule);
+								}
+							}
+						}
 					}
-					queue.insert(sort_of_a_query);
 				}
 			}
 			while (!queue.empty()) {
@@ -71,9 +82,11 @@ namespace structuralHorn {
 						weaken_query_interp = true;
 					}
 					for (int out_rule : g.get_out_hyperarcs(g.get_target_node(rule))) {
-						if ((delta.count(out_rule) > 0) && (g.get_target_node(out_rule) != error_id())) {
-							// TODO: is it important to also require that the interpretation of g.get_target_node(out_rule) is not "true"?
-							queue.insert(out_rule);
+						int head_pred_id = g.get_target_node(out_rule);
+						if ((delta.count(out_rule) > 0) && (head_pred_id != error_id())) {
+							if (s->num_of_conjs(head_pred_id) != 0) { // the interpretation is not true
+								queue.insert(out_rule);
+							}
 						}
 					}
 				}
@@ -102,7 +115,7 @@ namespace structuralHorn {
 			for (int i = 0; i < s->num_of_clauses(); i++) {
 				g.insert_hyperarc(i, s->body_predicates(i), s->head_predicate(i));
 			}
-			//std::cout << "\n" << g << "\n";
+			std::cout << "\n" << g << "\n";
 		}
 
 		~structural_horn() {
@@ -227,7 +240,8 @@ namespace structuralHorn {
 #endif
 					}
 
-				} while (!weaken_query_interp);
+				//} while (!weaken_query_interp);
+				} while (0);
 			}
 		}
 	};

@@ -47,14 +47,14 @@ outputsubdir=""
 case ${chcsolver} in
     0)
         case ${alg} in
-            0) outputsubdir=${outputdir}/sthorn_spacer_`date +%F_%T`_${seed};;
-            1) outputsubdir=${outputdir}/spacer_`date +%F_%T`_${seed};;
+            0) outputsubdir=${outputdir}/sthorn_spacer_`date +%F_%T`_${verbosity};;
+            1) outputsubdir=${outputdir}/spacer_`date +%F_%T`_${verbosity};;
         esac
         ;;
     1)
         case ${alg} in
-            0) outputsubdir=${outputdir}/sthorn_eldarica_`date +%F_%T`_${seed};;
-            1) outputsubdir=${outputdir}/eldarica_`date +%F_%T`_${seed};;
+            0) outputsubdir=${outputdir}/sthorn_eldarica_`date +%F_%T`_${verbosity};;
+            1) outputsubdir=${outputdir}/eldarica_`date +%F_%T`_${verbosity};;
         esac
         ;;
 esac
