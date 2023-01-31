@@ -99,8 +99,12 @@ public:
         }
         m_EldaricaAPI = m_env->NewObject(m_EldaricaClass, ctor, (gParams.array_theory == 1));
         // Load the SMT file
-        jmethodID read = loadMethod("readFromSmtFile", "(Ljava/lang/String;)V");
-        m_env->CallVoidMethod(m_EldaricaAPI, read, m_env->NewStringUTF(fileName.c_str()));
+        jmethodID read = loadMethod("readFromSmtFile", "(Ljava/lang/String;)Z");
+        jboolean res = m_env->CallBooleanMethod(m_EldaricaAPI, read, m_env->NewStringUTF(fileName.c_str()));
+        if (!res) {
+            cout << "Failed reasing SMT2 file!\n";
+            exit(EXIT_FAILURE);
+        }
 
         // Initialize all the methods needed for the API
         m_num_clauses = loadMethod("givemeNumOfClauses", "()I");
@@ -112,6 +116,8 @@ public:
         m_amend = loadMethod("amendProof2", "(Ljava/util/List;Ljava/util/List;I)Z");
         m_verbose = loadMethod("setVerbosity", "(I)V");
         m_num_of_conjs = loadMethod("givemeNumberOfConjs", "(I)I");
+
+        m_env->CallVoidMethod(m_EldaricaAPI, m_verbose, gParams.verbosity);
 
         cout << "EldaricaAPI successfully constructed !"<<endl;
     }
