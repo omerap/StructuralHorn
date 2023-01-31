@@ -72,7 +72,10 @@ ZBNUMFILES=$(($NUMFILES - 1))
 
 # submit array of jobs to SLURM
 if [ $ZBNUMFILES -ge 0 ]; then
-  sbatch --array=0-$ZBNUMFILES --output=${outputsubdir}/slurm/slurm_%A_%a run_files.cmd -i ${inputdir} -o ${outputsubdir} -r ${repodir} -t ${timeout} -m ${memout} -c ${chcsolver} -a ${alg} -y ${arrayTheory} -h ${hyperarcSources} -w ${hyperarcWeight} -s ${seed} -g ${globalGuidance} -d ${testMode} -v ${verbosity}
+	case ${chcsolver} in
+		0) sbatch --array=0-$ZBNUMFILES --output=${outputsubdir}/slurm/slurm_%A_%a run_files.cmd -i ${inputdir} -o ${outputsubdir} -r ${repodir} -t ${timeout} -m ${memout} -c ${chcsolver} -a ${alg} -y ${arrayTheory} -h ${hyperarcSources} -w ${hyperarcWeight} -s ${seed} -g ${globalGuidance} -d ${testMode} -v ${verbosity};;
+		1) sbatch -c 6 --array=0-$ZBNUMFILES --output=${outputsubdir}/slurm/slurm_%A_%a run_files.cmd -i ${inputdir} -o ${outputsubdir} -r ${repodir} -t ${timeout} -m ${memout} -c ${chcsolver} -a ${alg} -y ${arrayTheory} -h ${hyperarcSources} -w ${hyperarcWeight} -s ${seed} -g ${globalGuidance} -d ${testMode} -v ${verbosity};;
+	esac
 else
   echo "No jobs to submit, since no input files in this directory."
 fi
