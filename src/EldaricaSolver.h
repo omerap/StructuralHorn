@@ -93,11 +93,11 @@ public:
             exit(EXIT_FAILURE);
         }
 
-        jmethodID ctor = loadMethod("<init>", "(Z)V");
+        jmethodID ctor = loadMethod("<init>", "(ZZ)V");
         if(ctor == nullptr) {
             exit(EXIT_FAILURE);
         }
-        m_EldaricaAPI = m_env->NewObject(m_EldaricaClass, ctor, (gParams.array_theory == 1));
+        m_EldaricaAPI = m_env->NewObject(m_EldaricaClass, ctor, (gParams.array_theory == 1), gParams.inc_mode);
         // Load the SMT file
         jmethodID read = loadMethod("readFromSmtFile", "(Ljava/lang/String;)Z");
         jboolean res = m_env->CallBooleanMethod(m_EldaricaAPI, read, m_env->NewStringUTF(fileName.c_str()));
@@ -111,9 +111,16 @@ public:
         m_num_preds = loadMethod("givemeNumOfPredicates", "()I");
         m_body_preds = loadMethod("givemeBodyPredIds", "(I)Ljava/util/List;");
         m_head_pred = loadMethod("givemeHeadPredId", "(I)I");
-        m_solve = loadMethod("solve2", "(Ljava/util/List;Z)I");
+        if (gParams.inc_mode) {
+            m_solve = loadMethod("solve", "(Ljava/util/List;Z)I");
+            m_amend = loadMethod("amendProof", "(Ljava/util/List;Ljava/util/List;I)Z");
+        }
+        else {
+            m_solve = loadMethod("solve2", "(Ljava/util/List;Z)I");
+            m_amend = loadMethod("amendProof2", "(Ljava/util/List;Ljava/util/List;I)Z");
+        }
         m_amend_one = loadMethod("amendCls", "(I)Z");
-        m_amend = loadMethod("amendProof2", "(Ljava/util/List;Ljava/util/List;I)Z");
+
         m_verbose = loadMethod("setVerbosity", "(I)V");
         m_num_of_conjs = loadMethod("givemeNumberOfConjs", "(I)I");
 

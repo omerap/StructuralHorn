@@ -41,6 +41,8 @@ namespace structuralHorn {
         /* Test mode
             0 - off, 1 - on*/
         unsigned test_mode;
+
+        bool inc_mode;
     };
 
     std::ostream& operator<<(std::ostream& out, const SHParams& p);
