@@ -60,6 +60,7 @@ namespace structuralHorn {
 	class spacer : public solver {
 	private:
 		context c;
+		fixedpoint my_fp;
 		expr_vector clauses;
 				
 		func_decl_vector head_predicate_vec; // clause id -> head predicate
@@ -198,10 +199,15 @@ namespace structuralHorn {
 			return query;
 		}
 
-		result solve_chcs(expr_vector& chcs, expr& query, bool print_res = false) {
+		result solve_chcs(expr_vector& chcs, expr& query, bool print_res = false, bool use_my_fp = false) {
 			// initialize solver
 			fixedpoint fp(c);
-			fp.set(init_params(c));
+			if (use_my_fp) {
+				fp = my_fp;
+			}
+			else {
+				fp.set(init_params(c));
+			}
 
 			func_decl_set predicates;
 
@@ -255,7 +261,6 @@ namespace structuralHorn {
 				}
 			}
 
-			// TODO: if (print_res==true) then print the result and the interpretations/ground refutation to std::cout
 			if (spacer_res == z3::sat) {
 				if (print_res==true) {
 					std::cout << "\nThe ground refutation\n" << fp.get_answer();
@@ -294,14 +299,13 @@ namespace structuralHorn {
 		}
 
 	public:
-		spacer(char const* file) : solver(file), c(), clauses(c), head_predicate_vec(c){
+		spacer(char const* file) : solver(file), c(), my_fp(c), clauses(c), head_predicate_vec(c){
 #ifndef _WIN32
 			SH_MEASURE_FN;
 #endif
-			fixedpoint fp(c);
-			fp.set(init_params(c));
-			fp.from_file(file);
-			clauses = fp.assertions();
+			my_fp.set(init_params(c));
+			my_fp.from_file(file);
+			clauses = my_fp.assertions();
 			
 			for (int i = 0; i < clauses.size(); i++) {
 				// initialize head_predicate_vec, predicate_id_map, id_predicate_map and predicate_interpretation_map
@@ -558,7 +562,13 @@ namespace structuralHorn {
 				}
 			}
 			
-			result res = solve_chcs(chcs, query, print_res);
+			result res = result::unknown;
+			if (gParams.inc_mode) {
+				res = solve_chcs(chcs, query, print_res, true);
+			}
+			else {
+				res = solve_chcs(chcs, query, print_res, false);
+			}
 			
 			return res;
 		}

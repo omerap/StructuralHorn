@@ -42,7 +42,7 @@ std::string parseCmdLine(int argc, char** argv) {
         ("test-mode", po::value<unsigned>(&gParams.test_mode)->default_value(0),
             "Test mode: 0 - off, 1 - on")
         ("inc", po::value<bool>(&gParams.inc_mode)->default_value(false)->implicit_value(true),
-             "Test mode: 0 - off, 1 - on")
+             "incremental mode: false - off, true - on")
 		;
 
     po::options_description hidden("Hidden options");

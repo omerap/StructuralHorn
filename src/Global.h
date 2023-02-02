@@ -41,7 +41,9 @@ namespace structuralHorn {
         /* Test mode
             0 - off, 1 - on*/
         unsigned test_mode;
-
+	
+	/* Incremental mode - use the same solver object in different calls to solve
+            0 - off, 1 - on*/
         bool inc_mode;
     };
 

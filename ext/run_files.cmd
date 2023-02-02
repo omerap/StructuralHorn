@@ -10,9 +10,10 @@
 # --array-theory (0 - no, 1 - yes)
 # --global-guidance (0 - no, 1 - yes)
 # --test-mode (0 - off, 1 - on)
+# --inc (false - off, true - on)
 # --verbose (0 - print only final result, 1 - print the interpretation in each iteration)
 
-while getopts i:o:r:t:m:c:a:y:h:w:s:d:g:v: flag
+while getopts i:o:r:t:m:c:a:y:h:w:s:d:g:l:v: flag
 do
     case "${flag}" in
         i) inputdir=${OPTARG};;
@@ -28,6 +29,7 @@ do
         s) seed=${OPTARG};;
         d) testMode=${OPTARG};;
         g) globalGuidance=${OPTARG};;
+        l) incremental=${OPTARG};;
         v) verbosity=${OPTARG};;
     esac
 done
@@ -47,17 +49,14 @@ FILES=($(ls -1 ${inputdir}))
 FILENAME=${FILES[$SLURM_ARRAY_TASK_ID]}
 echo "My input file is ${FILENAME}"
 
-# make new directory, change into it, and run
-# python3 ${repodir}/ext/brunch.py --out ${outputdir} --cpu ${timeout} --mem ${memout} --format base:Cpu:Result:Status:main ${inputdir}/${FILENAME} -- ${repodir}/build/src/StructuralHorn --chc-solver=${chcsolver} --algorithm=${alg} --hyperarc-sources=${hyperarcSources} --hyperarc-weight=${hyperarcWeight} --random-seed=${seed} --array-theory=${arrayTheory} --global-guidance=${globalGuidance} --test-mode=${testMode} --verbose=${verbosity} {f}
-
 case ${alg} in
     0)
-        python3 ${repodir}/ext/brunch.py --out ${outputdir} --cpu ${timeout} --mem ${memout} --format base:Cpu:Result:Status:run_structural_horn ${inputdir}/${FILENAME} -- ${repodir}/rel/src/StructuralHorn --chc-solver=${chcsolver} --algorithm=${alg} --hyperarc-sources=${hyperarcSources} --hyperarc-weight=${hyperarcWeight} --random-seed=${seed} --array-theory=${arrayTheory} --global-guidance=${globalGuidance} --test-mode=${testMode} --verbose=${verbosity} {f}
+        python3 ${repodir}/ext/brunch.py --out ${outputdir} --cpu ${timeout} --mem ${memout} --format base:Result:Cpu:Status:run_structural_horn:mkRuleSat:Iterations ${inputdir}/${FILENAME} -- ${repodir}/rel2/src/StructuralHorn --chc-solver=${chcsolver} --algorithm=${alg} --hyperarc-sources=${hyperarcSources} --hyperarc-weight=${hyperarcWeight} --random-seed=${seed} --array-theory=${arrayTheory} --global-guidance=${globalGuidance} --test-mode=${testMode} --inc=${incremental} --verbose=${verbosity} {f}
         ;;
     1)
         case ${chcsolver} in
-            0) python3 ${repodir}/ext/brunch.py --out ${outputdir} --cpu ${timeout} --mem ${memout} --format base:Cpu:Result:Status:run_spacer ${inputdir}/${FILENAME} -- ${repodir}/rel/src/StructuralHorn --chc-solver=${chcsolver} --algorithm=${alg} --hyperarc-sources=${hyperarcSources} --hyperarc-weight=${hyperarcWeight} --random-seed=${seed} --array-theory=${arrayTheory} --global-guidance=${globalGuidance} --test-mode=${testMode} --verbose=${verbosity} {f};;
-            1) python3 ${repodir}/ext/brunch.py --out ${outputdir} --cpu ${timeout} --mem ${memout} --format base:Cpu:Result:Status:run_eldarica ${inputdir}/${FILENAME} -- ${repodir}/rel/src/StructuralHorn --chc-solver=${chcsolver} --algorithm=${alg} --hyperarc-sources=${hyperarcSources} --hyperarc-weight=${hyperarcWeight} --random-seed=${seed} --array-theory=${arrayTheory} --global-guidance=${globalGuidance} --test-mode=${testMode} --verbose=${verbosity} {f};;
+            0) python3 ${repodir}/ext/brunch.py --out ${outputdir} --cpu ${timeout} --mem ${memout} --format base:Result:Cpu:Status:run_spacer ${inputdir}/${FILENAME} -- ${repodir}/rel2/src/StructuralHorn --chc-solver=${chcsolver} --algorithm=${alg} --hyperarc-sources=${hyperarcSources} --hyperarc-weight=${hyperarcWeight} --random-seed=${seed} --array-theory=${arrayTheory} --global-guidance=${globalGuidance} --test-mode=${testMode} --inc=${incremental} --verbose=${verbosity} {f};;
+            1) python3 ${repodir}/ext/brunch.py --out ${outputdir} --cpu ${timeout} --mem ${memout} --format base:Result:Cpu:Status:run_eldarica ${inputdir}/${FILENAME} -- ${repodir}/rel2/src/StructuralHorn --chc-solver=${chcsolver} --algorithm=${alg} --hyperarc-sources=${hyperarcSources} --hyperarc-weight=${hyperarcWeight} --random-seed=${seed} --array-theory=${arrayTheory} --global-guidance=${globalGuidance} --test-mode=${testMode} --inc=${incremental} --verbose=${verbosity} {f};;
         esac
         ;;
 esac

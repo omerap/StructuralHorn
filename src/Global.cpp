@@ -16,6 +16,7 @@ namespace structuralHorn {
             << "\tarray_theory = " << (p.array_theory == 0 ? "no" : "yes") << "\n"
             << "\tglobal_guidance = " << (p.global_guidance == 0 ? "no" : "yes") << "\n"
             << "\ttest_mode = " << (p.test_mode == 0 ? "off" : "on") << "\n"
+            << "\tinc_mode = " << (p.inc_mode == false ? "off" : "on") << "\n"
             << "END";
         return out;
     }
