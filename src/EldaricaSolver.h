@@ -228,9 +228,16 @@ public:
             m_env->CallBooleanMethod(clauses, m_listAdd, oId);
         }
         int res = m_env->CallIntMethod(m_EldaricaAPI, m_solve, clauses, print_res);
+
+        if (m_env->ExceptionCheck()) {
+            cerr << "Error in solve!\n";
+            m_env->ExceptionDescribe();
+            return result::failed;
+        }
         if (res == 0) return result::sat;
         else if (res == 1) return result::unsat;
-        return result::unknown;
+        else if (res == 2) return result::unknown;
+        return result::failed;
     }
 
 private:
