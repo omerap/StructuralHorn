@@ -209,7 +209,9 @@ int main(int argc, char** argv) {
     else if (res == result::unsat) {
         std::cout << "\nUNSAT\n";
     }
-    else {
+    else if (res == result::failed) {
+        std::cout << "\nFAILED\n";
+    } else {
         std::cout << "\nUNKNOWN\n";
     }
 
@@ -219,6 +221,9 @@ int main(int argc, char** argv) {
     }
     else if (res == result::unsat) {
         Stats::set("Result", "UNSAT");
+    }
+    else if (res == result::failed){
+        Stats::set("Result", "FAILED");
     }
     else {
         Stats::set("Result", "UNKNOWN");

@@ -3,7 +3,7 @@
 #include <set>
 
 namespace structuralHorn {
-	enum class result {sat, unsat, unknown};
+	enum class result {sat, unsat, unknown, failed};
 
 	class solver {
     	protected:
