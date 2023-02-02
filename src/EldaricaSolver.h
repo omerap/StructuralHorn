@@ -99,8 +99,8 @@ public:
         }
         m_EldaricaAPI = m_env->NewObject(m_EldaricaClass, ctor, (gParams.array_theory == 1), gParams.inc_mode);
         // Load the SMT file
-        jmethodID read = loadMethod("readFromSmtFile", "(Ljava/lang/String;)Z");
-        jboolean res = m_env->CallBooleanMethod(m_EldaricaAPI, read, m_env->NewStringUTF(fileName.c_str()));
+        jmethodID read = loadMethod("readFromSmtFile", "(Ljava/lang/String;Z)Z");
+        jboolean res = m_env->CallBooleanMethod(m_EldaricaAPI, read, m_env->NewStringUTF(fileName.c_str()),false);
         if (!res) {
             cout << "Failed reasing SMT2 file!\n";
             exit(EXIT_FAILURE);
