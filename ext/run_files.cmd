@@ -51,12 +51,12 @@ echo "My input file is ${FILENAME}"
 
 case ${alg} in
     0)
-        python3 ${repodir}/ext/brunch.py --out ${outputdir} --cpu ${timeout} --mem ${memout} --format base:Result:Cpu:Status:run_structural_horn:mkRuleSat:Iterations ${inputdir}/${FILENAME} -- ${repodir}/rel2/src/StructuralHorn --chc-solver=${chcsolver} --algorithm=${alg} --hyperarc-sources=${hyperarcSources} --hyperarc-weight=${hyperarcWeight} --random-seed=${seed} --array-theory=${arrayTheory} --global-guidance=${globalGuidance} --test-mode=${testMode} --inc=${incremental} --verbose=${verbosity} {f}
+        python3 ${repodir}/ext/brunch.py --out ${outputdir} --cpu ${timeout} --mem ${memout} --format base:Result:Cpu:Status:run_structural_horn:mkRuleSat:Iterations ${inputdir}/${FILENAME} -- ${repodir}/build/src/StructuralHorn --chc-solver=${chcsolver} --algorithm=${alg} --hyperarc-sources=${hyperarcSources} --hyperarc-weight=${hyperarcWeight} --random-seed=${seed} --array-theory=${arrayTheory} --global-guidance=${globalGuidance} --test-mode=${testMode} --inc=${incremental} --verbose=${verbosity} {f}
         ;;
     1)
         case ${chcsolver} in
-            0) python3 ${repodir}/ext/brunch.py --out ${outputdir} --cpu ${timeout} --mem ${memout} --format base:Result:Cpu:Status:run_spacer ${inputdir}/${FILENAME} -- ${repodir}/rel2/src/StructuralHorn --chc-solver=${chcsolver} --algorithm=${alg} --hyperarc-sources=${hyperarcSources} --hyperarc-weight=${hyperarcWeight} --random-seed=${seed} --array-theory=${arrayTheory} --global-guidance=${globalGuidance} --test-mode=${testMode} --inc=${incremental} --verbose=${verbosity} {f};;
-            1) python3 ${repodir}/ext/brunch.py --out ${outputdir} --cpu ${timeout} --mem ${memout} --format base:Result:Cpu:Status:run_eldarica ${inputdir}/${FILENAME} -- ${repodir}/rel2/src/StructuralHorn --chc-solver=${chcsolver} --algorithm=${alg} --hyperarc-sources=${hyperarcSources} --hyperarc-weight=${hyperarcWeight} --random-seed=${seed} --array-theory=${arrayTheory} --global-guidance=${globalGuidance} --test-mode=${testMode} --inc=${incremental} --verbose=${verbosity} {f};;
+            0) python3 ${repodir}/ext/brunch.py --out ${outputdir} --cpu ${timeout} --mem ${memout} --format base:Result:Cpu:Status:run_spacer ${inputdir}/${FILENAME} -- ${repodir}/build/src/StructuralHorn --chc-solver=${chcsolver} --algorithm=${alg} --hyperarc-sources=${hyperarcSources} --hyperarc-weight=${hyperarcWeight} --random-seed=${seed} --array-theory=${arrayTheory} --global-guidance=${globalGuidance} --test-mode=${testMode} --inc=${incremental} --verbose=${verbosity} {f};;
+            1) python3 ${repodir}/ext/brunch.py --out ${outputdir} --cpu ${timeout} --mem ${memout} --format base:Result:Cpu:Status:run_eldarica ${inputdir}/${FILENAME} -- ${repodir}/build/src/StructuralHorn --chc-solver=${chcsolver} --algorithm=${alg} --hyperarc-sources=${hyperarcSources} --hyperarc-weight=${hyperarcWeight} --random-seed=${seed} --array-theory=${arrayTheory} --global-guidance=${globalGuidance} --test-mode=${testMode} --inc=${incremental} --verbose=${verbosity} {f};;
         esac
         ;;
 esac
