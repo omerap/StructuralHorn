@@ -1,3 +1,0 @@
-StructuralHorn.exe ../../example/chc-LIA_003.smt2 --chc-solver=1
-
-UNSAT
